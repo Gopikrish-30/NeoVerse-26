@@ -3,7 +3,7 @@
 import { useRef, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getNavigatorApp } from '@/lib/navigator-app';
-import { ArrowUp, WarningCircle } from '@phosphor-icons/react';
+import { ArrowUp, WarningCircle, Image as ImageIcon } from '@phosphor-icons/react';
 import { PROMPT_DEFAULT_MAX_LENGTH } from '@navigator_ai/agent-core/common';
 import { useSpeechInput } from '@/hooks/useSpeechInput';
 import { useTypingPlaceholder } from '@/hooks/useTypingPlaceholder';
@@ -11,6 +11,9 @@ import { SpeechInputButton } from '@/components/ui/SpeechInputButton';
 import { ModelIndicator } from '@/components/ui/ModelIndicator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import type { AttachedImage } from '@/components/ui/ImageAttachmentPreview';
+import { ImageAttachmentPreview } from '@/components/ui/ImageAttachmentPreview';
+import { AnimatePresence } from 'framer-motion';
 
 interface TaskInputBarProps {
   value: string;
@@ -28,6 +31,15 @@ interface TaskInputBarProps {
   hideModelWhenNoModel?: boolean;
   autoSubmitOnTranscription?: boolean;
   toolbarLeft?: ReactNode;
+  // Image attachment support
+  attachedImages?: AttachedImage[];
+  onRemoveImage?: (index: number) => void;
+  onImagePaste?: (e: React.ClipboardEvent) => void;
+  onImageDrop?: (e: React.DragEvent) => void;
+  onOpenImagePicker?: () => void;
+  canAddMoreImages?: boolean;
+  imageInputRef?: React.RefObject<HTMLInputElement | null>;
+  onImageFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function TaskInputBar({
@@ -46,11 +58,19 @@ export function TaskInputBar({
   hideModelWhenNoModel = false,
   autoSubmitOnTranscription = true,
   toolbarLeft,
+  attachedImages = [],
+  onRemoveImage,
+  onImagePaste,
+  onImageDrop,
+  onOpenImagePicker,
+  canAddMoreImages = true,
+  imageInputRef,
+  onImageFileChange,
 }: TaskInputBarProps) {
   const { t } = useTranslation('common');
   const isInputDisabled = disabled || isLoading;
   const isOverLimit = value.length > PROMPT_DEFAULT_MAX_LENGTH;
-  const canSubmit = !!value.trim() && !disabled && !isOverLimit;
+  const canSubmit = (!!value.trim() || attachedImages.length > 0) && !disabled && !isOverLimit;
   const isSubmitDisabled = !isLoading && (!canSubmit || isInputDisabled);
   const submitLabel = isLoading ? t('buttons.stop') : t('buttons.submit');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -120,6 +140,21 @@ export function TaskInputBar({
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    // Check if there are image items in clipboard
+    if (onImagePaste) {
+      const items = Array.from(e.clipboardData.items);
+      const hasImage = items.some((item) => item.type.startsWith('image/'));
+      if (hasImage) {
+        onImagePaste(e);
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
   return (
     <div className="w-full space-y-2">
       {speechInput.error && (
@@ -143,10 +178,35 @@ export function TaskInputBar({
         </Alert>
       )}
 
+      {/* Hidden file input */}
+      {imageInputRef && onImageFileChange && (
+        <input
+          ref={imageInputRef as React.RefObject<HTMLInputElement>}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={onImageFileChange}
+          aria-label="Attach images"
+        />
+      )}
+
       <div
         className="rounded-xl border border-border bg-card shadow-sm transition-all duration-200 ease-navigator cursor-text focus-within:border-primary/30 focus-within:shadow-md"
         onClick={() => textareaRef.current?.focus()}
+        onDragOver={handleDragOver}
+        onDrop={onImageDrop}
       >
+        {/* Image previews */}
+        <AnimatePresence>
+          {attachedImages.length > 0 && (
+            <ImageAttachmentPreview
+              images={attachedImages}
+              onRemove={onRemoveImage ?? (() => { })}
+            />
+          )}
+        </AnimatePresence>
+
         <div className="px-4 pt-3 pb-1">
           <textarea
             data-testid="task-input-textarea"
@@ -154,6 +214,7 @@ export function TaskInputBar({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder={effectivePlaceholder}
             disabled={isInputDisabled || speechInput.isRecording}
             rows={3}
@@ -162,7 +223,35 @@ export function TaskInputBar({
         </div>
 
         <div className="flex h-[36px] items-center justify-between pl-3 pr-2 mb-2">
-          <div className="flex items-center">{toolbarLeft}</div>
+          <div className="flex items-center gap-1">
+            {toolbarLeft}
+
+            {/* Image upload button */}
+            {onOpenImagePicker && canAddMoreImages && !isInputDisabled && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={onOpenImagePicker}
+                    className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label="Attach image"
+                  >
+                    <ImageIcon className="h-4 w-4" weight="light" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span>Attach image (or paste / drag & drop)</span>
+                </TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Badge showing number of images attached */}
+            {attachedImages.length > 0 && (
+              <span className="text-[10px] text-muted-foreground tabular-nums">
+                {attachedImages.length} image{attachedImages.length !== 1 ? 's' : ''} attached
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-3">
             {onOpenModelSettings && (
@@ -204,13 +293,12 @@ export function TaskInputBar({
                     onSubmit();
                   }}
                   disabled={isSubmitDisabled || speechInput.isRecording}
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-200 ease-navigator ${
-                    isLoading
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-200 ease-navigator ${isLoading
                       ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
                       : isSubmitDisabled || speechInput.isRecording
                         ? 'bg-muted text-muted-foreground/60'
                         : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  }`}
+                    }`}
                 >
                   {isLoading ? (
                     <span className="block h-[10px] w-[10px] rounded-[1.5px] bg-destructive-foreground" />
@@ -223,7 +311,7 @@ export function TaskInputBar({
                 <span>
                   {isOverLimit
                     ? t('buttons.messageTooLong')
-                    : !value.trim()
+                    : !value.trim() && attachedImages.length === 0
                       ? t('buttons.enterMessage')
                       : submitLabel}
                 </span>

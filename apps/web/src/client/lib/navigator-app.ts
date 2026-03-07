@@ -328,13 +328,13 @@ interface NavigatorAppAPI {
     mimeType?: string,
   ): Promise<
     | {
-        success: true;
-        result: { text: string; confidence?: number; duration: number; timestamp: number };
-      }
+      success: true;
+      result: { text: string; confidence?: number; duration: number; timestamp: number };
+    }
     | {
-        success: false;
-        error: { code: string; message: string };
-      }
+      success: false;
+      error: { code: string; message: string };
+    }
   >;
 
   // Logging
@@ -368,6 +368,12 @@ interface NavigatorAppAPI {
   completeConnectorOAuth(state: string, code: string): Promise<McpConnector>;
   disconnectConnector(connectorId: string): Promise<void>;
   onMcpAuthCallback?(callback: (url: string) => void): () => void;
+
+  // File utilities
+  saveImageToDisk(
+    base64Data: string,
+    mimeType: string,
+  ): Promise<{ success: true; filePath: string } | { success: false; error: string }>;
 
   // Telegram Bot
   telegramSetToken(token: string): Promise<{ username: string; firstName: string }>;
