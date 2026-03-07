@@ -50,9 +50,9 @@ describe('maskPii', () => {
       expect(maskPii(text)).toBe(text);
     });
 
-    it('should not mask 5-digit numbers (e.g., counts)', () => {
+    it('should mask 5-digit numbers (e.g., counts) as ZIP to enforce HIPAA', () => {
       const text = 'Found 12345 results';
-      expect(maskPii(text)).toBe(text);
+      expect(maskPii(text)).toBe('Found [ZIP] results');
     });
   });
 
@@ -89,9 +89,9 @@ describe('maskPii', () => {
       expect(maskPii('123456 is my phone number')).toBe('[PHONE] is my phone number');
     });
 
-    it('should not mask random numbers without keywords', () => {
+    it('should mask standalone digit sequences as ZIP due to HIPAA', () => {
       const text = 'order 123456 confirmed';
-      expect(maskPii(text)).toBe(text);
+      expect(maskPii(text)).toBe('order [ZIP] confirmed');
     });
   });
 
@@ -124,9 +124,9 @@ describe('maskPii', () => {
       expect(maskPii('authentication code: 456789')).toBe('authentication code: [OTP]');
     });
 
-    it('should not mask standalone digit sequences without keywords', () => {
+    it('should mask standalone 6-digit digit sequences as ZIP due to HIPAA (Indian PIN)', () => {
       const text = 'The answer is 123456';
-      expect(maskPii(text)).toBe(text);
+      expect(maskPii(text)).toBe('The answer is [ZIP]');
     });
   });
 
@@ -186,6 +186,20 @@ describe('maskPii', () => {
 
     it('should mask compact UK postcodes', () => {
       expect(maskPii('Code: EC1A1BB')).toBe('Code: [ADDRESS]');
+    });
+  });
+
+  describe('ZIP codes and Indian PIN codes', () => {
+    it('should mask standard 5-digit US ZIP codes', () => {
+      expect(maskPii('My zip code is 90210')).toBe('My zip code is [ZIP]');
+    });
+
+    it('should mask 9-digit US ZIP codes', () => {
+      expect(maskPii('Zip: 12345-6789')).toBe('Zip: [ZIP]');
+    });
+
+    it('should mask 6-digit Indian PIN codes', () => {
+      expect(maskPii('PIN: 110001')).toBe('PIN: [ZIP]');
     });
   });
 
