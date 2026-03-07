@@ -5,8 +5,6 @@
  * Just text and chevron, very clean and unobtrusive.
  */
 
-'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CaretDown, Gear, Warning } from '@phosphor-icons/react';

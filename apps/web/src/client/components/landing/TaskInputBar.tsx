@@ -1,5 +1,3 @@
-'use client';
-
 import { useRef, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getNavigatorApp } from '@/lib/navigator-app';
@@ -202,7 +200,7 @@ export function TaskInputBar({
           {attachedImages.length > 0 && (
             <ImageAttachmentPreview
               images={attachedImages}
-              onRemove={onRemoveImage ?? (() => { })}
+              onRemove={onRemoveImage ?? (() => {})}
             />
           )}
         </AnimatePresence>
@@ -293,12 +291,13 @@ export function TaskInputBar({
                     onSubmit();
                   }}
                   disabled={isSubmitDisabled || speechInput.isRecording}
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-200 ease-navigator ${isLoading
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-200 ease-navigator ${
+                    isLoading
                       ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
                       : isSubmitDisabled || speechInput.isRecording
                         ? 'bg-muted text-muted-foreground/60'
                         : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    }`}
+                  }`}
                 >
                   {isLoading ? (
                     <span className="block h-[10px] w-[10px] rounded-[1.5px] bg-destructive-foreground" />

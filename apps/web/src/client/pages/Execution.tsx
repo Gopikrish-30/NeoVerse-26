@@ -106,7 +106,7 @@ export function ExecutionPage() {
         followUpInputRef.current?.focus();
       }, 0);
     },
-    onError: () => { },
+    onError: () => {},
   });
 
   const scrollToBottom = useMemo(
@@ -261,7 +261,10 @@ export function ExecutionPage() {
       }
     }
     // Build enhanced prompt that includes image file paths
-    const finalPrompt = await buildPromptWithImages(followUp, followUpImageAttachments.attachedImages);
+    const finalPrompt = await buildPromptWithImages(
+      followUp,
+      followUpImageAttachments.attachedImages,
+    );
     await sendFollowUp(finalPrompt);
     setFollowUp('');
     followUpImageAttachments.clearAll();
@@ -678,6 +681,7 @@ export function ExecutionPage() {
                 <input
                   placeholder={t('agentWorking')}
                   disabled
+                  aria-label={t('agentWorking')}
                   className="flex-1 bg-transparent text-sm text-muted-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed"
                 />
                 <ModelIndicator isRunning={true} onOpenSettings={handleOpenModelSettings} />
@@ -685,6 +689,7 @@ export function ExecutionPage() {
                 <button
                   onClick={interruptTask}
                   title={t('stopAgent')}
+                  aria-label={t('stopAgent')}
                   className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-white hover:bg-destructive/90 transition-colors shrink-0"
                   data-testid="execution-stop-button"
                 >
@@ -801,27 +806,30 @@ export function ExecutionPage() {
                     />
 
                     {/* Image attachment button for follow-up */}
-                    {followUpImageAttachments.canAddMore && !isLoading && !speechInput.isRecording && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            onClick={followUpImageAttachments.openFilePicker}
-                            className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-                            aria-label="Attach image to follow-up"
-                          >
-                            <ImageIcon className="h-4 w-4" weight="light" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <span>Attach image (or paste / drag &amp; drop)</span>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                    {followUpImageAttachments.canAddMore &&
+                      !isLoading &&
+                      !speechInput.isRecording && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={followUpImageAttachments.openFilePicker}
+                              className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                              aria-label="Attach image to follow-up"
+                            >
+                              <ImageIcon className="h-4 w-4" weight="light" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>Attach image (or paste / drag &amp; drop)</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
 
                     {followUpImageAttachments.attachedImages.length > 0 && (
                       <span className="text-[10px] text-muted-foreground tabular-nums">
-                        {followUpImageAttachments.attachedImages.length} image{followUpImageAttachments.attachedImages.length !== 1 ? 's' : ''}
+                        {followUpImageAttachments.attachedImages.length} image
+                        {followUpImageAttachments.attachedImages.length !== 1 ? 's' : ''}
                       </span>
                     )}
                   </div>
@@ -845,7 +853,12 @@ export function ExecutionPage() {
                     <button
                       type="button"
                       onClick={handleFollowUp}
-                      disabled={(!followUp.trim() && followUpImageAttachments.attachedImages.length === 0) || isLoading || speechInput.isRecording}
+                      disabled={
+                        (!followUp.trim() &&
+                          followUpImageAttachments.attachedImages.length === 0) ||
+                        isLoading ||
+                        speechInput.isRecording
+                      }
                       className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       title={tCommon('buttons.send')}
                     >

@@ -44,9 +44,16 @@ function interpolate(text: string, options?: Record<string, unknown>): string {
 vi.mock('react-i18next', () => ({
   useTranslation: (ns?: string) => ({
     t: (key: string, options?: Record<string, unknown>) => {
-      const namespace = ns || 'common';
+      let namespace = ns || 'common';
+      let lookupKey = key;
+      // Support cross-namespace references like 'common:buttons.delete'
+      if (key.includes(':')) {
+        const [nsPrefix, rest] = key.split(':', 2);
+        namespace = nsPrefix;
+        lookupKey = rest;
+      }
       const nsData = translations[namespace];
-      const value = nsData ? getNestedValue(nsData, key) : undefined;
+      const value = nsData ? getNestedValue(nsData, lookupKey) : undefined;
       if (value) {
         return interpolate(value, options);
       }

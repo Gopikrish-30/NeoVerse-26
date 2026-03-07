@@ -226,7 +226,7 @@ export function HomePage() {
                 {t('examplePrompts')}
               </h2>
 
-              <div className="grid grid-cols-3 gap-3 w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full">
                 {useCaseExamples.map((example, index) => (
                   <motion.button
                     key={index}
