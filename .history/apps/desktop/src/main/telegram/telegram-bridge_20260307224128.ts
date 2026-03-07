@@ -78,8 +78,8 @@ export class TelegramBridge {
           userId: pending.userId,
           username: pending.username,
           firstName: pending.firstName,
-          requestedAt: new Date(pending.requestedAt).toISOString(),
-          expiresAt: new Date(pending.expiresAt).toISOString(),
+          requestedAt: pending.requestedAt,
+          expiresAt: pending.expiresAt,
         });
       }
     }

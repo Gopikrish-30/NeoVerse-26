@@ -57,34 +57,6 @@ export class TelegramBridge {
     });
   }
 
-  /**
-   * Create a pending pairing request and notify all Electron windows.
-   * Called by TelegramBot when a valid PIN is entered from Telegram.
-   */
-  requestPairingApproval(
-    chatId: number,
-    userId: number,
-    username: string | undefined,
-    firstName: string | undefined,
-  ): void {
-    const pending = createPendingPairing(chatId, userId, username, firstName);
-
-    // Notify all Electron windows about the pending pairing request
-    for (const win of BrowserWindow.getAllWindows()) {
-      if (!win.isDestroyed()) {
-        win.webContents.send('telegram:pairing-request', {
-          id: pending.id,
-          chatId: pending.chatId,
-          userId: pending.userId,
-          username: pending.username,
-          firstName: pending.firstName,
-          requestedAt: new Date(pending.requestedAt).toISOString(),
-          expiresAt: new Date(pending.expiresAt).toISOString(),
-        });
-      }
-    }
-  }
-
   async startTask(chatId: number, prompt: string): Promise<string> {
     const storage = getStorage();
     const taskManager = getTaskManager();

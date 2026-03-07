@@ -11,8 +11,6 @@ import { ArrowUpLeft } from '@phosphor-icons/react';
 import { hasAnyReadyProvider } from '@navigator_ai/agent-core/common';
 import { PlusMenu } from '@/components/landing/PlusMenu';
 import { IntegrationIcon } from '@/components/landing/IntegrationIcons';
-import { useImageAttachments } from '@/hooks/useImageAttachments';
-import { buildPromptWithImages } from '@/lib/image-prompt';
 
 const USE_CASE_KEYS = [
   { key: 'calendarPrepNotes', icons: ['calendar.google.com', 'docs.google.com'] },
@@ -39,8 +37,6 @@ export function HomePage() {
   const navigatorApp = useMemo(() => getNavigatorApp(), []);
   const { t } = useTranslation('home');
 
-  const imageAttachments = useImageAttachments();
-
   const useCaseExamples = useMemo(() => {
     return USE_CASE_KEYS.map(({ key, icons }) => ({
       title: t(`useCases.${key}.title`),
@@ -66,25 +62,21 @@ export function HomePage() {
   }, [addTaskUpdate, setPermissionRequest, navigatorApp]);
 
   const executeTask = useCallback(async () => {
-    if ((!prompt.trim() && imageAttachments.attachedImages.length === 0) || isLoading) return;
-
-    // Build the prompt, embedding image file paths if any images are attached
-    const finalPrompt = await buildPromptWithImages(prompt.trim(), imageAttachments.attachedImages);
+    if (!prompt.trim() || isLoading) return;
 
     const taskId = `task_${Date.now()}`;
-    const task = await startTask({ prompt: finalPrompt, taskId });
+    const task = await startTask({ prompt: prompt.trim(), taskId });
     if (task) {
-      imageAttachments.clearAll();
       navigate(`/execution/${task.id}`);
     }
-  }, [prompt, imageAttachments, isLoading, startTask, navigate]);
+  }, [prompt, isLoading, startTask, navigate]);
 
   const handleSubmit = async () => {
     if (isLoading) {
       void interruptTask();
       return;
     }
-    if (!prompt.trim() && imageAttachments.attachedImages.length === 0) return;
+    if (!prompt.trim()) return;
 
     const isE2EMode = await navigatorApp.isE2EMode();
     if (!isE2EMode) {
@@ -119,7 +111,7 @@ export function HomePage() {
 
   const handleApiKeySaved = async () => {
     setShowSettingsDialog(false);
-    if (prompt.trim() || imageAttachments.attachedImages.length > 0) {
+    if (prompt.trim()) {
       await executeTask();
     }
   };
@@ -195,14 +187,6 @@ export function HomePage() {
                 onOpenModelSettings={handleOpenModelSettings}
                 onSpeechConfigChanged={speechConfigChanged}
                 hideModelWhenNoModel={true}
-                attachedImages={imageAttachments.attachedImages}
-                onRemoveImage={imageAttachments.removeImage}
-                onImagePaste={imageAttachments.handlePaste}
-                onImageDrop={imageAttachments.handleDrop}
-                onOpenImagePicker={imageAttachments.openFilePicker}
-                canAddMoreImages={imageAttachments.canAddMore}
-                imageInputRef={imageAttachments.fileInputRef}
-                onImageFileChange={imageAttachments.handleFileInputChange}
                 toolbarLeft={
                   <PlusMenu
                     onSkillSelect={handleSkillSelect}

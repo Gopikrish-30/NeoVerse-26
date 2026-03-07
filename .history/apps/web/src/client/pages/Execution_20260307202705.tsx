@@ -19,7 +19,6 @@ import {
   Square,
   Download,
   CaretDown,
-  Image as ImageIcon,
 } from '@phosphor-icons/react';
 import { isWaitingForUser } from '../lib/waiting-detection';
 import { SettingsDialog } from '../components/layout/SettingsDialog';
@@ -33,10 +32,6 @@ import { MessageBubble } from '../components/execution/MessageList';
 import { ToolProgress } from '../components/execution/ToolProgress';
 import { PermissionDialog } from '../components/execution/PermissionDialog';
 import { DebugPanel, type DebugLogEntry } from '../components/execution/DebugPanel';
-import { useImageAttachments } from '../hooks/useImageAttachments';
-import { ImageAttachmentPreview } from '../components/ui/ImageAttachmentPreview';
-import { buildPromptWithImages } from '../lib/image-prompt';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T {
   let timeoutId: ReturnType<typeof setTimeout>;
@@ -65,8 +60,6 @@ export function ExecutionPage() {
   >('providers');
   const [pendingFollowUp, setPendingFollowUp] = useState<string | null>(null);
   const pendingSpeechFollowUpRef = useRef<string | null>(null);
-
-  const followUpImageAttachments = useImageAttachments();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -106,7 +99,7 @@ export function ExecutionPage() {
         followUpInputRef.current?.focus();
       }, 0);
     },
-    onError: () => { },
+    onError: () => {},
   });
 
   const scrollToBottom = useMemo(
@@ -249,7 +242,7 @@ export function ExecutionPage() {
   }, [canFollowUp]);
 
   const handleFollowUp = useCallback(async () => {
-    if (!followUp.trim() && followUpImageAttachments.attachedImages.length === 0) return;
+    if (!followUp.trim()) return;
     const isE2EMode = await navigatorApp.isE2EMode();
     if (!isE2EMode) {
       const settings = await navigatorApp.getProviderSettings();
@@ -260,12 +253,9 @@ export function ExecutionPage() {
         return;
       }
     }
-    // Build enhanced prompt that includes image file paths
-    const finalPrompt = await buildPromptWithImages(followUp, followUpImageAttachments.attachedImages);
-    await sendFollowUp(finalPrompt);
+    await sendFollowUp(followUp);
     setFollowUp('');
-    followUpImageAttachments.clearAll();
-  }, [followUp, navigatorApp, sendFollowUp, followUpImageAttachments]);
+  }, [followUp, navigatorApp, sendFollowUp]);
 
   const handleSettingsDialogClose = (open: boolean) => {
     setShowSettingsDialog(open);
@@ -453,7 +443,7 @@ export function ExecutionPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-[12px]"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-[12px]"
               >
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -672,7 +662,7 @@ export function ExecutionPage() {
 
         {/* Running state input with Stop button */}
         {currentTask.status === 'running' && !permissionRequest && (
-          <div className="flex-shrink-0 border-t border-border bg-card/70 backdrop-blur-sm px-6 py-4">
+          <div className="flex-shrink-0 border-t border-border bg-card/50 px-6 py-4">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5">
                 <input
@@ -685,7 +675,7 @@ export function ExecutionPage() {
                 <button
                   onClick={interruptTask}
                   title={t('stopAgent')}
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-white hover:bg-destructive/90 transition-colors shrink-0"
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-[#e54d2e] text-white hover:bg-[#d4442a] transition-colors shrink-0"
                   data-testid="execution-stop-button"
                 >
                   <span className="block h-2.5 w-2.5 rounded-[2px] bg-white" />
@@ -697,7 +687,7 @@ export function ExecutionPage() {
 
         {/* Follow-up input */}
         {canFollowUp && (
-          <div className="flex-shrink-0 border-t border-border bg-card/70 backdrop-blur-sm px-6 py-4">
+          <div className="flex-shrink-0 border-t border-border bg-card/50 px-6 py-4">
             <div className="max-w-4xl mx-auto space-y-2">
               {speechInput.error && (
                 <Alert
@@ -719,33 +709,7 @@ export function ExecutionPage() {
                   </AlertDescription>
                 </Alert>
               )}
-
-              {/* Hidden file input for image uploads in follow-up */}
-              <input
-                ref={followUpImageAttachments.fileInputRef as React.RefObject<HTMLInputElement>}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={followUpImageAttachments.handleFileInputChange}
-                aria-label="Attach images to follow-up"
-              />
-
-              <div
-                className="rounded-xl border border-border bg-background shadow-sm transition-all duration-200 focus-within:border-ring focus-within:ring-1 focus-within:ring-ring"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={followUpImageAttachments.handleDrop}
-              >
-                {/* Image previews for follow-up */}
-                <AnimatePresence>
-                  {followUpImageAttachments.attachedImages.length > 0 && (
-                    <ImageAttachmentPreview
-                      images={followUpImageAttachments.attachedImages}
-                      onRemove={followUpImageAttachments.removeImage}
-                    />
-                  )}
-                </AnimatePresence>
-
+              <div className="rounded-xl border border-border bg-background shadow-sm transition-all duration-200 focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
                 <div className="px-4 pt-3 pb-2">
                   <textarea
                     ref={followUpInputRef}
@@ -760,14 +724,6 @@ export function ExecutionPage() {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         handleFollowUp();
-                      }
-                    }}
-                    onPaste={(e) => {
-                      // Handle image paste
-                      const items = Array.from(e.clipboardData.items);
-                      const hasImage = items.some((item) => item.type.startsWith('image/'));
-                      if (hasImage) {
-                        followUpImageAttachments.handlePaste(e);
                       }
                     }}
                     placeholder={
@@ -786,46 +742,18 @@ export function ExecutionPage() {
                   />
                 </div>
                 <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border/50">
-                  <div className="flex items-center gap-1">
-                    <PlusMenu
-                      onSkillSelect={(command) => {
-                        const newValue = `${command} ${followUp}`.trim();
-                        setFollowUp(newValue);
-                        setTimeout(() => followUpInputRef.current?.focus(), 0);
-                      }}
-                      onOpenSettings={(tab) => {
-                        setSettingsInitialTab(tab);
-                        setShowSettingsDialog(true);
-                      }}
-                      disabled={isLoading || speechInput.isRecording}
-                    />
-
-                    {/* Image attachment button for follow-up */}
-                    {followUpImageAttachments.canAddMore && !isLoading && !speechInput.isRecording && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            onClick={followUpImageAttachments.openFilePicker}
-                            className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-                            aria-label="Attach image to follow-up"
-                          >
-                            <ImageIcon className="h-4 w-4" weight="light" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <span>Attach image (or paste / drag &amp; drop)</span>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-
-                    {followUpImageAttachments.attachedImages.length > 0 && (
-                      <span className="text-[10px] text-muted-foreground tabular-nums">
-                        {followUpImageAttachments.attachedImages.length} image{followUpImageAttachments.attachedImages.length !== 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </div>
-
+                  <PlusMenu
+                    onSkillSelect={(command) => {
+                      const newValue = `${command} ${followUp}`.trim();
+                      setFollowUp(newValue);
+                      setTimeout(() => followUpInputRef.current?.focus(), 0);
+                    }}
+                    onOpenSettings={(tab) => {
+                      setSettingsInitialTab(tab);
+                      setShowSettingsDialog(true);
+                    }}
+                    disabled={isLoading || speechInput.isRecording}
+                  />
                   <div className="flex items-center gap-2">
                     <ModelIndicator isRunning={false} onOpenSettings={handleOpenModelSettings} />
                     <div className="w-px h-6 bg-border flex-shrink-0" />
@@ -845,7 +773,7 @@ export function ExecutionPage() {
                     <button
                       type="button"
                       onClick={handleFollowUp}
-                      disabled={(!followUp.trim() && followUpImageAttachments.attachedImages.length === 0) || isLoading || speechInput.isRecording}
+                      disabled={!followUp.trim() || isLoading || speechInput.isRecording}
                       className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       title={tCommon('buttons.send')}
                     >

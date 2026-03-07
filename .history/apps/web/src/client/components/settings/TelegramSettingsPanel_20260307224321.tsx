@@ -41,8 +41,6 @@ export function TelegramSettingsPanel() {
   const [success, setSuccess] = useState<string | null>(null);
   const [pairingData, setPairingData] = useState<PairingData | null>(null);
   const [pairingLoading, setPairingLoading] = useState(false);
-  const [pendingRequest, setPendingRequest] = useState<PendingPairingRequest | null>(null);
-  const [approvingPairing, setApprovingPairing] = useState(false);
 
   const refreshStatus = useCallback(async () => {
     try {
@@ -52,9 +50,6 @@ export function TelegramSettingsPanel() {
       ]);
       setStatus(statusData);
       setHasToken(tokenExists);
-      if (statusData.pendingPairingRequest) {
-        setPendingRequest(statusData.pendingPairingRequest);
-      }
     } catch (err) {
       console.warn('Failed to get Telegram status:', err);
     }
@@ -63,16 +58,6 @@ export function TelegramSettingsPanel() {
   useEffect(() => {
     refreshStatus();
   }, [refreshStatus]);
-
-  // Listen for real-time pairing requests from main process
-  useEffect(() => {
-    const cleanup = navigatorApp.onTelegramPairingRequest?.((request) => {
-      setPendingRequest(request);
-    });
-    return () => {
-      cleanup?.();
-    };
-  }, [navigatorApp]);
 
   const handleSaveToken = async () => {
     const trimmed = tokenInput.trim();
@@ -154,42 +139,6 @@ export function TelegramSettingsPanel() {
       await refreshStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to unpair');
-    }
-  };
-
-  const handleApprovePairing = async () => {
-    if (!pendingRequest) {
-      return;
-    }
-    setApprovingPairing(true);
-    setError(null);
-    try {
-      await navigatorApp.telegramApprovePairing(pendingRequest.id);
-      setPendingRequest(null);
-      setPairingData(null);
-      setSuccess(t('telegram.pairingApproved'));
-      await refreshStatus();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to approve pairing');
-    } finally {
-      setApprovingPairing(false);
-    }
-  };
-
-  const handleDenyPairing = async () => {
-    if (!pendingRequest) {
-      return;
-    }
-    setApprovingPairing(true);
-    setError(null);
-    try {
-      await navigatorApp.telegramDenyPairing(pendingRequest.id);
-      setPendingRequest(null);
-      setSuccess(t('telegram.pairingDenied'));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to deny pairing');
-    } finally {
-      setApprovingPairing(false);
     }
   };
 
@@ -325,13 +274,6 @@ export function TelegramSettingsPanel() {
                         })}
                       </p>
                     )}
-                    {status.lastActiveAt && (
-                      <p className="text-xs text-muted-foreground">
-                        {t('telegram.lastActive', {
-                          date: new Date(status.lastActiveAt).toLocaleString(),
-                        })}
-                      </p>
-                    )}
                   </div>
                   <button
                     onClick={handleUnpair}
@@ -344,61 +286,6 @@ export function TelegramSettingsPanel() {
             </div>
           ) : (
             <div className="space-y-3">
-              {/* Pending pairing approval request */}
-              {pendingRequest && (
-                <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 space-y-3">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                      {t('telegram.pairingRequestTitle')}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('telegram.pairingRequestDescription')}
-                    </p>
-                  </div>
-                  <div className="text-sm space-y-1">
-                    {pendingRequest.firstName && (
-                      <p>
-                        <span className="text-muted-foreground">{t('telegram.requestName')}:</span>{' '}
-                        <strong>{pendingRequest.firstName}</strong>
-                      </p>
-                    )}
-                    {pendingRequest.username && (
-                      <p>
-                        <span className="text-muted-foreground">
-                          {t('telegram.requestUsername')}:
-                        </span>{' '}
-                        <strong>@{pendingRequest.username}</strong>
-                      </p>
-                    )}
-                    <p>
-                      <span className="text-muted-foreground">{t('telegram.requestUserId')}:</span>{' '}
-                      <code className="text-xs">{pendingRequest.userId}</code>
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t('telegram.requestExpires', {
-                        time: new Date(pendingRequest.expiresAt).toLocaleTimeString(),
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleApprovePairing}
-                      disabled={approvingPairing}
-                      className="rounded-md px-4 py-2 text-sm font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
-                    >
-                      {t('telegram.approveRequest')}
-                    </button>
-                    <button
-                      onClick={handleDenyPairing}
-                      disabled={approvingPairing}
-                      className="rounded-md px-4 py-2 text-sm font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 disabled:opacity-50 transition-colors"
-                    >
-                      {t('telegram.denyRequest')}
-                    </button>
-                  </div>
-                </div>
-              )}
-
               <p className="text-xs text-muted-foreground">{t('telegram.pairingHelp')}</p>
 
               {pairingData ? (

@@ -10,7 +10,7 @@ import {
   denyPendingPairing,
   getPendingPairing,
 } from './telegram-auth';
-import type { TelegramPairing } from './telegram-auth';
+import type { TelegramPairing, PendingPairingRequest } from './telegram-auth';
 
 const TELEGRAM_TOKEN_STORAGE_KEY = 'telegram:bot-token';
 const TELEGRAM_PAIRING_STORAGE_KEY = 'telegram:pairing';

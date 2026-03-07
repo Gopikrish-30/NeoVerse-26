@@ -66,41 +66,18 @@ export class TelegramBot {
         return;
       }
 
-      // Try pairing with PIN — requires desktop-side approval
-      if (args) {
-        const pinResult = validatePairingPin(args);
-
-        if (pinResult === 'rate_limited') {
-          await ctx.reply(
-            '🚫 <b>Too many failed attempts.</b>\n\n' +
-              'Pairing is temporarily locked. Please try again later.',
-            { parse_mode: 'HTML' },
-          );
-          return;
-        }
-
-        if (pinResult === 'valid') {
-          // PIN is correct — create pending pairing request for desktop approval
-          const chatId = ctx.chat.id;
-          const userId = ctx.from?.id ?? 0;
-          const username = ctx.from?.username;
-          const firstName = ctx.from?.first_name;
-
-          this.bridge.requestPairingApproval(chatId, userId, username, firstName);
-
-          await ctx.reply(
-            '⏳ <b>Pairing request sent!</b>\n\n' +
-              'Please approve this pairing on your Navigator desktop app.\n' +
-              'The request will expire in 2 minutes.',
-            { parse_mode: 'HTML' },
-          );
-          return;
-        }
-
-        // Invalid PIN
+      // Try pairing with PIN
+      if (args && validatePairingPin(args)) {
+        const newPairing: TelegramPairing = {
+          chatId: ctx.chat.id,
+          username: ctx.from?.username,
+          pairedAt: new Date().toISOString(),
+        };
+        this.pairing = newPairing;
+        this.onPairingChange(newPairing);
         await ctx.reply(
-          '❌ <b>Invalid or expired PIN.</b>\n\n' +
-            'Please check the PIN in Navigator Settings and try again.',
+          '✅ <b>Successfully paired!</b>\n\nThis Telegram account is now linked to your Navigator instance.\n\n' +
+            formatWelcome(),
           { parse_mode: 'HTML' },
         );
         return;
@@ -112,8 +89,7 @@ export class TelegramBot {
           'To link this bot to your Navigator app:\n' +
           '1. Open Navigator Settings → Telegram\n' +
           '2. Click "Generate Pairing PIN"\n' +
-          '3. Scan the QR code or send: <code>/start YOUR_PIN</code>\n' +
-          '4. <b>Approve the pairing</b> on your desktop app',
+          '3. Send: <code>/start YOUR_PIN</code>',
         { parse_mode: 'HTML' },
       );
     });
@@ -556,49 +532,6 @@ export class TelegramBot {
 
   updatePairing(pairing: TelegramPairing | null): void {
     this.pairing = pairing;
-  }
-
-  /** Notify Telegram user that pairing was approved */
-  async notifyPairingApproved(chatId: number): Promise<void> {
-    try {
-      await this.bot.api.sendMessage(
-        chatId,
-        '✅ <b>Pairing approved!</b>\n\n' +
-          'This Telegram account is now linked to your Navigator instance.\n\n' +
-          formatWelcome(),
-        { parse_mode: 'HTML' },
-      );
-    } catch (error) {
-      console.error('[TelegramBot] Failed to notify pairing approval:', error);
-    }
-  }
-
-  /** Notify Telegram user that pairing was denied */
-  async notifyPairingDenied(chatId: number): Promise<void> {
-    try {
-      await this.bot.api.sendMessage(
-        chatId,
-        '❌ <b>Pairing denied.</b>\n\nThe desktop user denied your pairing request.',
-        { parse_mode: 'HTML' },
-      );
-    } catch (error) {
-      console.error('[TelegramBot] Failed to notify pairing denial:', error);
-    }
-  }
-
-  /** Notify Telegram user that their session has expired */
-  async notifySessionExpired(chatId: number): Promise<void> {
-    try {
-      await this.bot.api.sendMessage(
-        chatId,
-        '🔒 <b>Session expired.</b>\n\n' +
-          'Your session has expired due to inactivity.\n' +
-          'Please re-pair using /start YOUR_PIN from Navigator Settings.',
-        { parse_mode: 'HTML' },
-      );
-    } catch (error) {
-      console.error('[TelegramBot] Failed to notify session expiry:', error);
-    }
   }
 
   async getBotInfo(): Promise<{ username: string; firstName: string } | null> {
