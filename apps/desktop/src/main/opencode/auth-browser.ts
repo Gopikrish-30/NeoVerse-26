@@ -2,6 +2,7 @@ import * as pty from 'node-pty';
 import { app, shell } from 'electron';
 import { getOpenCodeCliPath } from './electron-options';
 import { generateOpenCodeConfig } from './config-generator';
+import { validateOAuthUrl } from '../security/url-validation';
 import {
   stripAnsi,
   quoteForShell,
@@ -76,12 +77,11 @@ export class OAuthBrowserFlow {
       const tryOpenExternal = async (url: string) => {
         if (openedUrl) return;
         try {
-          const parsed = new URL(url);
-          if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return;
+          validateOAuthUrl(url);
           openedUrl = url;
           await shell.openExternal(url);
-        } catch {
-          // intentionally empty
+        } catch (error) {
+          console.error('[Security] Failed to open OAuth URL:', error instanceof Error ? error.message : error);
         }
       };
 

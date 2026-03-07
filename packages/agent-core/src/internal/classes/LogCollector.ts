@@ -8,6 +8,7 @@
 
 import { type LogLevel, type LogSource } from '../../common/types/logging.js';
 import { detectLogSource } from '../../common/utils/log-source-detector.js';
+import { redactSensitiveText } from '../../utils/log-redaction.js';
 
 /**
  * Internal interface for the basic file writer that LogCollector needs.
@@ -102,7 +103,7 @@ export class LogCollector {
       }
     }
 
-    this.writer.write(level, source, fullMessage);
+    this.writer.write(level, source, redactSensitiveText(fullMessage));
   }
 
   /**
@@ -195,6 +196,6 @@ export class LogCollector {
       .join(' ');
 
     const source = detectLogSource(message);
-    this.writer.write(level, source, message);
+    this.writer.write(level, source, redactSensitiveText(message));
   }
 }

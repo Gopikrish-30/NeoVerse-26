@@ -359,6 +359,7 @@ vi.mock('@main/permission-api', () => ({
   resolveQuestion: vi.fn(() => true),
   isFilePermissionRequest: vi.fn((requestId: string) => requestId.startsWith('filereq_')),
   isQuestionRequest: vi.fn((requestId: string) => requestId.startsWith('question_')),
+  denyPendingRequestsForTask: vi.fn(),
   QUESTION_API_PORT: 9227,
 }));
 
@@ -1081,7 +1082,7 @@ describe('IPC Handlers Integration', () => {
 
     it('shell:open-external should open valid http URL', async () => {
       // Arrange
-      const url = 'https://example.com';
+      const url = 'https://github.com';
 
       // Act
       await invokeHandler('shell:open-external', url);
@@ -1092,7 +1093,7 @@ describe('IPC Handlers Integration', () => {
 
     it('shell:open-external should open valid https URL', async () => {
       // Arrange
-      const url = 'http://localhost:3000';
+      const url = 'https://docs.github.com/en';
 
       // Act
       await invokeHandler('shell:open-external', url);

@@ -28,6 +28,7 @@ import type { ProviderId } from '@navigator_ai/agent-core';
 import { disposeTaskManager, cleanupVertexServiceAccountKey } from './opencode';
 import { oauthBrowserFlow } from './opencode/auth-browser';
 import { migrateLegacyData } from './store/legacyMigration';
+import { validateGeneralExternalUrl } from './security/url-validation';
 import {
   initializeStorage,
   closeStorage,
@@ -166,7 +167,12 @@ function createWindow() {
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('https:') || url.startsWith('http:')) {
-      shell.openExternal(url);
+      try {
+        validateGeneralExternalUrl(url);
+        shell.openExternal(url);
+      } catch (error) {
+        console.error('[Security] Blocked external URL:', error instanceof Error ? error.message : error);
+      }
     }
     return { action: 'deny' };
   });
@@ -180,12 +186,19 @@ function createWindow() {
   }
 
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    const isLocalDevRoute =
+      !app.isPackaged &&
+      typeof ROUTER_URL === 'string' &&
+      ROUTER_URL.startsWith('http://localhost');
+
+    const contentSecurityPolicy = isLocalDevRoute
+      ? "default-src 'self' http: https: ws: wss: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' http: https:; style-src 'self' 'unsafe-inline' http: https:; img-src 'self' data: blob: http: https:; connect-src 'self' http: https: ws: wss:; font-src 'self' data: http: https:"
+      : "default-src 'self' https:; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:; font-src 'self' https: data:";
+
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self' https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: ws: wss:; font-src 'self' https: data:",
-        ],
+        'Content-Security-Policy': [contentSecurityPolicy],
       },
     });
   });

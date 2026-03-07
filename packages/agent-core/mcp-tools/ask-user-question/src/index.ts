@@ -9,6 +9,7 @@ import {
 
 const QUESTION_API_PORT = process.env.QUESTION_API_PORT || '9227';
 const QUESTION_API_URL = `http://127.0.0.1:${QUESTION_API_PORT}/question`;
+const LOCAL_API_AUTH_TOKEN = process.env.LOCAL_API_AUTH_TOKEN || '';
 
 interface QuestionOption {
   label: string;
@@ -115,9 +116,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request): Promise<CallToo
   }
 
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (LOCAL_API_AUTH_TOKEN) {
+      headers['X-Navigator-Auth'] = LOCAL_API_AUTH_TOKEN;
+    }
+
     const response = await fetch(QUESTION_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         question: question.question,
         header: question.header,

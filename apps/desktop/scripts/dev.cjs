@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const { isWindows, runCommandSync, runPnpmSync } = require('../../../scripts/dev-runtime.cjs');
 
 const desktopRoot = path.join(__dirname, '..');
@@ -64,10 +65,31 @@ function ensureNativeModules(commandEnv) {
 }
 
 function runElectronRebuild(commandEnv) {
+  const rebuildEnv = { ...commandEnv };
+
+  // Ensure C++ standard headers resolve on macOS CLT-based setups.
+  if (process.platform === 'darwin') {
+    const sdkPath = getMacSdkPath();
+    if (sdkPath) {
+      const sdkIncludeFlag = `-isysroot ${sdkPath} -I${sdkPath}/usr/include/c++/v1`;
+      rebuildEnv.CXXFLAGS = `${rebuildEnv.CXXFLAGS || ''} ${sdkIncludeFlag}`.trim();
+      rebuildEnv.CPPFLAGS = `${rebuildEnv.CPPFLAGS || ''} ${sdkIncludeFlag}`.trim();
+      rebuildEnv.SDKROOT = rebuildEnv.SDKROOT || sdkPath;
+    }
+  }
+
   runPnpmSync(['exec', 'electron-rebuild', '-f'], {
     cwd: desktopRoot,
-    env: commandEnv,
+    env: rebuildEnv,
   });
+}
+
+function getMacSdkPath() {
+  try {
+    return execSync('xcrun --show-sdk-path', { encoding: 'utf8' }).trim();
+  } catch {
+    return '';
+  }
 }
 
 function hasWindowsPrebuiltNativeModules(commandEnv) {

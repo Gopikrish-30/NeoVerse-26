@@ -44,6 +44,24 @@ type QuestionRequestListener = (questionRequest: {
 }) => void;
 let questionRequestListener: QuestionRequestListener | null = null;
 
+const LOCAL_API_AUTH_TOKEN = process.env.LOCAL_API_AUTH_TOKEN || '';
+
+function isRequestAuthorized(req: http.IncomingMessage): boolean {
+  if (!LOCAL_API_AUTH_TOKEN) {
+    return true;
+  }
+
+  const headerValue = req.headers['x-navigator-auth'];
+  if (typeof headerValue === 'string') {
+    return headerValue === LOCAL_API_AUTH_TOKEN;
+  }
+  if (Array.isArray(headerValue)) {
+    return headerValue.includes(LOCAL_API_AUTH_TOKEN);
+  }
+
+  return false;
+}
+
 /**
  * Register a listener that is called when question requests arrive.
  */
@@ -101,7 +119,7 @@ export function startPermissionApiServer(): http.Server {
     // CORS headers for local requests
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Navigator-Auth');
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
@@ -114,6 +132,12 @@ export function startPermissionApiServer(): http.Server {
     if (req.method !== 'POST' || req.url !== '/permission') {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Not found' }));
+      return;
+    }
+
+    if (!isRequestAuthorized(req)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
       return;
     }
 
@@ -203,7 +227,7 @@ export function startQuestionApiServer(): http.Server {
     // CORS headers for local requests
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Navigator-Auth');
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
@@ -216,6 +240,12 @@ export function startQuestionApiServer(): http.Server {
     if (req.method !== 'POST' || req.url !== '/question') {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Not found' }));
+      return;
+    }
+
+    if (!isRequestAuthorized(req)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
       return;
     }
 

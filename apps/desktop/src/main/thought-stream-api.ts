@@ -26,6 +26,25 @@ let mainWindow: BrowserWindow | null = null;
 // Singleton handler instance for task tracking and event validation
 const thoughtStreamHandler: ThoughtStreamAPI = createThoughtStreamHandler();
 
+function isRequestAuthorized(req: http.IncomingMessage): boolean {
+  // Read auth token at request time to support testing
+  const LOCAL_API_AUTH_TOKEN = process.env.LOCAL_API_AUTH_TOKEN || '';
+  
+  if (!LOCAL_API_AUTH_TOKEN) {
+    return true;
+  }
+
+  const headerValue = req.headers['x-navigator-auth'];
+  if (typeof headerValue === 'string') {
+    return headerValue === LOCAL_API_AUTH_TOKEN;
+  }
+  if (Array.isArray(headerValue)) {
+    return headerValue.includes(LOCAL_API_AUTH_TOKEN);
+  }
+
+  return false;
+}
+
 /**
  * Initialize the thought stream API with dependencies
  */
@@ -55,7 +74,7 @@ export function startThoughtStreamServer(): http.Server {
     // CORS headers for local requests
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Navigator-Auth');
 
     // Handle preflight
     if (req.method === 'OPTIONS') {
@@ -68,6 +87,12 @@ export function startThoughtStreamServer(): http.Server {
     if (req.method !== 'POST') {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Not found' }));
+      return;
+    }
+
+    if (!isRequestAuthorized(req)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
       return;
     }
 
@@ -86,12 +111,25 @@ export function startThoughtStreamServer(): http.Server {
       return;
     }
 
+    // Check endpoint exists first (before validating task)
+    if (req.url !== '/thought' && req.url !== '/checkpoint') {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Not found' }));
+      return;
+    }
+
     // Validate taskId exists and is active
     const taskId = data.taskId as string;
-    if (!taskId || !thoughtStreamHandler.isTaskActive(taskId)) {
-      // Fire-and-forget: return 200 even for unknown tasks
-      res.writeHead(200);
-      res.end();
+    if (!taskId) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Missing taskId' }));
+      return;
+    }
+
+    if (!thoughtStreamHandler.isTaskActive(taskId)) {
+      console.warn(`[Thought Stream API] Received event for unknown/inactive task: ${taskId}`);
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unknown or inactive task', taskId }));
       return;
     }
 
@@ -100,9 +138,6 @@ export function startThoughtStreamServer(): http.Server {
       handleThought(data as unknown as ThoughtEvent, res);
     } else if (req.url === '/checkpoint') {
       handleCheckpoint(data as unknown as CheckpointEvent, res);
-    } else {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Not found' }));
     }
   });
 

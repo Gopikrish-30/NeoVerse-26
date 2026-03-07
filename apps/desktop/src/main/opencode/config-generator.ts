@@ -1,5 +1,6 @@
 import { app } from 'electron';
 import path from 'path';
+import crypto from 'crypto';
 import {
   generateConfig,
   NAVIGATOR_AGENT_NAME,
@@ -16,6 +17,9 @@ import { skillsManager } from '../skills';
 import { PERMISSION_API_PORT, QUESTION_API_PORT } from '@navigator_ai/agent-core';
 
 export { NAVIGATOR_AGENT_NAME };
+
+const LOCAL_API_AUTH_TOKEN = process.env.LOCAL_API_AUTH_TOKEN || crypto.randomBytes(32).toString('hex');
+process.env.LOCAL_API_AUTH_TOKEN = LOCAL_API_AUTH_TOKEN;
 
 /**
  * Returns the path to MCP tools directory.
@@ -142,6 +146,7 @@ export async function generateOpenCodeConfig(azureFoundryToken?: string): Promis
     providerConfigs,
     permissionApiPort: PERMISSION_API_PORT,
     questionApiPort: QUESTION_API_PORT,
+    localApiAuthToken: LOCAL_API_AUTH_TOKEN,
     enabledProviders,
     model: modelOverride?.model,
     smallModel: modelOverride?.smallModel,

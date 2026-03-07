@@ -16,6 +16,7 @@ import type { OpenCodeMessage } from '../../common/types/opencode.js';
 import type { PermissionRequest } from '../../common/types/permission.js';
 import type { TodoItem } from '../../common/types/todo.js';
 import { serializeError } from '../../utils/error.js';
+import { redactSensitiveText } from '../../utils/log-redaction.js';
 
 const LOG_TRUNCATION_LIMIT = 500;
 
@@ -202,17 +203,17 @@ export class OpenCodeAdapter extends EventEmitter<OpenCodeAdapterEvents> {
     const cliArgs = await this.options.buildCliArgs(config);
 
     const { command, args: baseArgs } = this.options.getCliCommand();
-    const startMsg = `Starting: ${command} ${[...baseArgs, ...cliArgs].join(' ')}`;
+    const startMsg = redactSensitiveText(`Starting: ${command} ${[...baseArgs, ...cliArgs].join(' ')}`);
     console.log('[OpenCode CLI]', startMsg);
     this.emit('debug', { type: 'info', message: startMsg });
 
     const env = await this.options.buildEnvironment(taskId);
 
     const allArgs = [...baseArgs, ...cliArgs];
-    const cmdMsg = `Command: ${command}`;
-    const argsMsg = `Args: ${allArgs.join(' ')}`;
+    const cmdMsg = redactSensitiveText(`Command: ${command}`);
+    const argsMsg = redactSensitiveText(`Args: ${allArgs.join(' ')}`);
     const safeCwd = config.workingDirectory || this.options.tempPath;
-    const cwdMsg = `Working directory: ${safeCwd}`;
+    const cwdMsg = redactSensitiveText(`Working directory: ${safeCwd}`);
 
     if (this.options.isPackaged && this.options.platform === 'win32') {
       const dummyPackageJson = path.join(safeCwd, 'package.json');
@@ -240,7 +241,7 @@ export class OpenCodeAdapter extends EventEmitter<OpenCodeAdapterEvents> {
     {
       const { file: spawnFile, args: spawnArgs } = this.buildPtySpawnArgs(command, allArgs);
 
-      const spawnMsg = `PTY spawn: ${spawnFile} ${spawnArgs.join(' ')}`;
+      const spawnMsg = redactSensitiveText(`PTY spawn: ${spawnFile} ${spawnArgs.join(' ')}`);
       console.log('[OpenCode CLI]', spawnMsg);
       this.emit('debug', { type: 'info', message: spawnMsg });
 
@@ -265,11 +266,12 @@ export class OpenCodeAdapter extends EventEmitter<OpenCodeAdapterEvents> {
           .replace(/\x1B\][^\x1B]*\x1B\\/g, '');
         /* eslint-enable no-control-regex */
         if (cleanData.trim()) {
+          const redactedData = redactSensitiveText(cleanData);
           const truncated =
-            cleanData.substring(0, LOG_TRUNCATION_LIMIT) +
-            (cleanData.length > LOG_TRUNCATION_LIMIT ? '...' : '');
+            redactedData.substring(0, LOG_TRUNCATION_LIMIT) +
+            (redactedData.length > LOG_TRUNCATION_LIMIT ? '...' : '');
           console.log('[OpenCode CLI stdout]:', truncated);
-          this.emit('debug', { type: 'stdout', message: cleanData });
+          this.emit('debug', { type: 'stdout', message: redactedData });
 
           this.streamParser.feed(cleanData);
         }
@@ -739,8 +741,8 @@ export class OpenCodeAdapter extends EventEmitter<OpenCodeAdapterEvents> {
     const { command, args: baseArgs } = this.options.getCliCommand();
     console.log(
       '[OpenCode Adapter] Session resumption command:',
-      command,
-      [...baseArgs, ...cliArgs].join(' '),
+      redactSensitiveText(command),
+      redactSensitiveText([...baseArgs, ...cliArgs].join(' ')),
     );
 
     const env = await this.options.buildEnvironment(this.currentTaskId || 'default');
@@ -766,11 +768,12 @@ export class OpenCodeAdapter extends EventEmitter<OpenCodeAdapterEvents> {
         .replace(/\x1B\][^\x1B]*\x1B\\/g, '');
       /* eslint-enable no-control-regex */
       if (cleanData.trim()) {
+        const redactedData = redactSensitiveText(cleanData);
         const truncated =
-          cleanData.substring(0, LOG_TRUNCATION_LIMIT) +
-          (cleanData.length > LOG_TRUNCATION_LIMIT ? '...' : '');
+          redactedData.substring(0, LOG_TRUNCATION_LIMIT) +
+          (redactedData.length > LOG_TRUNCATION_LIMIT ? '...' : '');
         console.log('[OpenCode CLI stdout]:', truncated);
-        this.emit('debug', { type: 'stdout', message: cleanData });
+        this.emit('debug', { type: 'stdout', message: redactedData });
 
         this.streamParser.feed(cleanData);
       }
