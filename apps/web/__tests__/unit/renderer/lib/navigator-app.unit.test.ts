@@ -27,18 +27,20 @@ describe('Navigator API', () => {
 
   describe('isRunningInElectron', () => {
     it('should return true when navigatorAppShell.isElectron is true', async () => {
-      (globalThis as unknown as { window: { navigatorAppShell: { isElectron: boolean } } }).window = {
-        navigatorAppShell: { isElectron: true },
-      };
+      (globalThis as unknown as { window: { navigatorAppShell: { isElectron: boolean } } }).window =
+        {
+          navigatorAppShell: { isElectron: true },
+        };
 
       const { isRunningInElectron } = await import('@/lib/navigator-app');
       expect(isRunningInElectron()).toBe(true);
     });
 
     it('should return false when navigatorAppShell.isElectron is false', async () => {
-      (globalThis as unknown as { window: { navigatorAppShell: { isElectron: boolean } } }).window = {
-        navigatorAppShell: { isElectron: false },
-      };
+      (globalThis as unknown as { window: { navigatorAppShell: { isElectron: boolean } } }).window =
+        {
+          navigatorAppShell: { isElectron: false },
+        };
 
       const { isRunningInElectron } = await import('@/lib/navigator-app');
       expect(isRunningInElectron()).toBe(false);
@@ -63,9 +65,10 @@ describe('Navigator API', () => {
 
     it('should use strict equality for isElectron check', async () => {
       // Truthy but not true should return false
-      (globalThis as unknown as { window: { navigatorAppShell: { isElectron: number } } }).window = {
-        navigatorAppShell: { isElectron: 1 },
-      };
+      (globalThis as unknown as { window: { navigatorAppShell: { isElectron: number } } }).window =
+        {
+          navigatorAppShell: { isElectron: 1 },
+        };
 
       const { isRunningInElectron } = await import('@/lib/navigator-app');
       expect(isRunningInElectron()).toBe(false);
@@ -117,9 +120,10 @@ describe('Navigator API', () => {
 
       for (const platform of platforms) {
         vi.resetModules();
-        (globalThis as unknown as { window: { navigatorAppShell: { platform: string } } }).window = {
-          navigatorAppShell: { platform },
-        };
+        (globalThis as unknown as { window: { navigatorAppShell: { platform: string } } }).window =
+          {
+            navigatorAppShell: { platform },
+          };
         const { getShellPlatform } = await import('@/lib/navigator-app');
         expect(getShellPlatform()).toBe(platform);
       }

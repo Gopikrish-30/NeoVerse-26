@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-
 interface SkillCardProps {
   skill: Skill;
   onToggle: (id: string) => void;

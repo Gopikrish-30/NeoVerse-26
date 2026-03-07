@@ -7,7 +7,6 @@ import type { Skill } from '@navigator_ai/agent-core/common';
 import { Input } from '@/components/ui/input';
 import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
-
 interface SkillsSubmenuProps {
   skills: Skill[];
   onSkillSelect: (command: string) => void;

@@ -37,11 +37,7 @@ if (
     `Invalid DEV_BROWSER_PORT: ${process.env.DEV_BROWSER_PORT}. Must be a number between 1 and 65535`,
   );
 }
-if (
-  !Number.isFinite(NAVIGATOR_CDP_PORT) ||
-  NAVIGATOR_CDP_PORT < 1 ||
-  NAVIGATOR_CDP_PORT > 65535
-) {
+if (!Number.isFinite(NAVIGATOR_CDP_PORT) || NAVIGATOR_CDP_PORT < 1 || NAVIGATOR_CDP_PORT > 65535) {
   throw new Error(
     `Invalid DEV_BROWSER_CDP_PORT: ${process.env.DEV_BROWSER_CDP_PORT}. Must be a number between 1 and 65535`,
   );

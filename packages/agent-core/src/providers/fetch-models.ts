@@ -187,7 +187,9 @@ export async function fetchProviderModels(
           // Retry on rate limit or server errors
           if ((status === 429 || status >= 500) && attempt < maxAttempts) {
             const backoff = 500 * attempt; // 500ms, 1000ms, ...
-            console.warn(`[FetchModels] Attempt ${attempt} failed (${status}). Retrying after ${backoff}ms`);
+            console.warn(
+              `[FetchModels] Attempt ${attempt} failed (${status}). Retrying after ${backoff}ms`,
+            );
             await new Promise((r) => setTimeout(r, backoff));
             continue;
           }
@@ -201,7 +203,9 @@ export async function fetchProviderModels(
 
         const totalMs = Date.now() - t0;
         const attemptMs = Date.now() - attemptStart;
-        console.log(`[FetchModels] Fetched ${models.length} models from ${endpointConfig.url} in ${attemptMs}ms (attempt ${attempt}, total ${totalMs}ms)`);
+        console.log(
+          `[FetchModels] Fetched ${models.length} models from ${endpointConfig.url} in ${attemptMs}ms (attempt ${attempt}, total ${totalMs}ms)`,
+        );
         return { success: true, models };
       } catch (err) {
         lastError = err;
@@ -211,7 +215,10 @@ export async function fetchProviderModels(
         if (isAbort || isNetwork) {
           if (attempt < maxAttempts) {
             const backoff = 500 * attempt;
-            console.warn(`[FetchModels] Attempt ${attempt} failed (network/timeout). Retrying after ${backoff}ms`, err);
+            console.warn(
+              `[FetchModels] Attempt ${attempt} failed (network/timeout). Retrying after ${backoff}ms`,
+              err,
+            );
             await new Promise((r) => setTimeout(r, backoff));
             continue;
           }

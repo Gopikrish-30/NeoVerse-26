@@ -3,10 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { getNavigatorApp } from '@/lib/navigator-app';
 import { settingsVariants, settingsTransitions } from '@/lib/animations';
-import type {
-  ConnectedProvider,
-  VertexProviderCredentials,
-} from '@navigator_ai/agent-core/common';
+import type { ConnectedProvider, VertexProviderCredentials } from '@navigator_ai/agent-core/common';
 import {
   ModelSelector,
   ConnectButton,

@@ -4,10 +4,7 @@
 console.error('[dev-browser-mcp] Script starting...');
 console.error('[dev-browser-mcp] Node version:', process.version);
 console.error('[dev-browser-mcp] CWD:', process.cwd());
-console.error(
-  '[dev-browser-mcp] NAVIGATOR_TASK_ID:',
-  process.env.NAVIGATOR_TASK_ID || '(not set)',
-);
+console.error('[dev-browser-mcp] NAVIGATOR_TASK_ID:', process.env.NAVIGATOR_TASK_ID || '(not set)');
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -1473,12 +1470,9 @@ async function getAISnapshot(page: Page, options: SnapshotOptions = {}): Promise
     preserveSubtrees: options.preserveSubtrees || false,
   };
 
-  const result = await page.evaluate(
-    (opts) => {
-      return (globalThis as any).__devBrowser_getAISnapshot(opts);
-    },
-    optsToSend,
-  );
+  const result = await page.evaluate((opts) => {
+    return (globalThis as any).__devBrowser_getAISnapshot(opts);
+  }, optsToSend);
   return result as string;
 }
 
