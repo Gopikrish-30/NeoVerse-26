@@ -477,6 +477,11 @@ const navigatorAppAPI = {
   ): Promise<{ success: true; filePath: string } | { success: false; error: string }> =>
     ipcRenderer.invoke('file:save-image', base64Data, mimeType),
 
+  savePdfToDisk: (
+    base64Data: string,
+  ): Promise<{ success: true; filePath: string } | { success: false; error: string }> =>
+    ipcRenderer.invoke('file:save-pdf', base64Data),
+
   // Telegram Bot
   telegramSetToken: (token: string): Promise<{ username: string; firstName: string }> =>
     ipcRenderer.invoke('telegram:set-token', token),

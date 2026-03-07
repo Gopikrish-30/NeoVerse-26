@@ -35,8 +35,12 @@ import { PermissionDialog } from '../components/execution/PermissionDialog';
 import { DebugPanel, type DebugLogEntry } from '../components/execution/DebugPanel';
 import { useImageAttachments } from '../hooks/useImageAttachments';
 import { ImageAttachmentPreview } from '../components/ui/ImageAttachmentPreview';
+import { usePdfAttachments } from '../hooks/usePdfAttachments';
+import { PdfAttachmentPreview } from '../components/ui/PdfAttachmentPreview';
 import { buildPromptWithImages } from '../lib/image-prompt';
+import { buildPromptWithPdfs } from '../lib/pdf-prompt';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { FilePdf } from '@phosphor-icons/react';
 
 function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T {
   let timeoutId: ReturnType<typeof setTimeout>;
@@ -67,6 +71,7 @@ export function ExecutionPage() {
   const pendingSpeechFollowUpRef = useRef<string | null>(null);
 
   const followUpImageAttachments = useImageAttachments();
+  const followUpPdfAttachments = usePdfAttachments();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -106,7 +111,7 @@ export function ExecutionPage() {
         followUpInputRef.current?.focus();
       }, 0);
     },
-    onError: () => {},
+    onError: () => { },
   });
 
   const scrollToBottom = useMemo(
@@ -249,7 +254,7 @@ export function ExecutionPage() {
   }, [canFollowUp]);
 
   const handleFollowUp = useCallback(async () => {
-    if (!followUp.trim() && followUpImageAttachments.attachedImages.length === 0) return;
+    if (!followUp.trim() && followUpImageAttachments.attachedImages.length === 0 && followUpPdfAttachments.attachedPdfs.length === 0) return;
     const isE2EMode = await navigatorApp.isE2EMode();
     if (!isE2EMode) {
       const settings = await navigatorApp.getProviderSettings();
@@ -260,15 +265,18 @@ export function ExecutionPage() {
         return;
       }
     }
-    // Build enhanced prompt that includes image file paths
-    const finalPrompt = await buildPromptWithImages(
+    // Build enhanced prompt that includes image and PDF file paths
+    let finalPrompt = await buildPromptWithImages(
       followUp,
       followUpImageAttachments.attachedImages,
     );
+    finalPrompt = await buildPromptWithPdfs(finalPrompt, followUpPdfAttachments.attachedPdfs);
+
     await sendFollowUp(finalPrompt);
     setFollowUp('');
     followUpImageAttachments.clearAll();
-  }, [followUp, navigatorApp, sendFollowUp, followUpImageAttachments]);
+    followUpPdfAttachments.clearAll();
+  }, [followUp, navigatorApp, sendFollowUp, followUpImageAttachments, followUpPdfAttachments]);
 
   const handleSettingsDialogClose = (open: boolean) => {
     setShowSettingsDialog(open);
@@ -736,17 +744,37 @@ export function ExecutionPage() {
                 aria-label="Attach images to follow-up"
               />
 
+              {/* Hidden file input for PDF uploads in follow-up */}
+              <input
+                ref={followUpPdfAttachments.fileInputRef as React.RefObject<HTMLInputElement>}
+                type="file"
+                accept="application/pdf"
+                multiple
+                className="hidden"
+                onChange={followUpPdfAttachments.handleFileInputChange}
+                aria-label="Attach PDFs to follow-up"
+              />
+
               <div
                 className="rounded-xl border border-border bg-background shadow-sm transition-all duration-200 focus-within:border-ring focus-within:ring-1 focus-within:ring-ring"
                 onDragOver={(e) => e.preventDefault()}
-                onDrop={followUpImageAttachments.handleDrop}
+                onDrop={(e) => {
+                  followUpImageAttachments.handleDrop(e);
+                  followUpPdfAttachments.handleDrop(e);
+                }}
               >
-                {/* Image previews for follow-up */}
+                {/* Previews for follow-up */}
                 <AnimatePresence>
                   {followUpImageAttachments.attachedImages.length > 0 && (
                     <ImageAttachmentPreview
                       images={followUpImageAttachments.attachedImages}
                       onRemove={followUpImageAttachments.removeImage}
+                    />
+                  )}
+                  {followUpPdfAttachments.attachedPdfs.length > 0 && (
+                    <PdfAttachmentPreview
+                      pdfs={followUpPdfAttachments.attachedPdfs}
+                      onRemove={followUpPdfAttachments.removePdf}
                     />
                   )}
                 </AnimatePresence>
@@ -826,10 +854,33 @@ export function ExecutionPage() {
                         </Tooltip>
                       )}
 
-                    {followUpImageAttachments.attachedImages.length > 0 && (
+                    {/* PDF attachment button for follow-up */}
+                    {followUpPdfAttachments.canAddMore &&
+                      !isLoading &&
+                      !speechInput.isRecording && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={followUpPdfAttachments.openFilePicker}
+                              className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                              aria-label="Attach PDF to follow-up"
+                            >
+                              <FilePdf className="h-4 w-4" weight="light" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>Attach PDF (or drop)</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+
+                    {(followUpImageAttachments.attachedImages.length > 0 || followUpPdfAttachments.attachedPdfs.length > 0) && (
                       <span className="text-[10px] text-muted-foreground tabular-nums">
-                        {followUpImageAttachments.attachedImages.length} image
-                        {followUpImageAttachments.attachedImages.length !== 1 ? 's' : ''}
+                        {[
+                          followUpImageAttachments.attachedImages.length > 0 ? `${followUpImageAttachments.attachedImages.length} image${followUpImageAttachments.attachedImages.length !== 1 ? 's' : ''}` : null,
+                          followUpPdfAttachments.attachedPdfs.length > 0 ? `${followUpPdfAttachments.attachedPdfs.length} PDF${followUpPdfAttachments.attachedPdfs.length !== 1 ? 's' : ''}` : null
+                        ].filter(Boolean).join(', ')}
                       </span>
                     )}
                   </div>
@@ -855,7 +906,8 @@ export function ExecutionPage() {
                       onClick={handleFollowUp}
                       disabled={
                         (!followUp.trim() &&
-                          followUpImageAttachments.attachedImages.length === 0) ||
+                          followUpImageAttachments.attachedImages.length === 0 &&
+                          followUpPdfAttachments.attachedPdfs.length === 0) ||
                         isLoading ||
                         speechInput.isRecording
                       }

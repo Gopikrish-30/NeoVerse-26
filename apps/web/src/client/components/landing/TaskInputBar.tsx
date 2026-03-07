@@ -11,7 +11,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { AttachedImage } from '@/components/ui/ImageAttachmentPreview';
 import { ImageAttachmentPreview } from '@/components/ui/ImageAttachmentPreview';
+import { PdfAttachmentPreview } from '@/components/ui/PdfAttachmentPreview';
 import { AnimatePresence } from 'framer-motion';
+import { FilePdf } from '@phosphor-icons/react';
 
 interface TaskInputBarProps {
   value: string;
@@ -38,6 +40,13 @@ interface TaskInputBarProps {
   canAddMoreImages?: boolean;
   imageInputRef?: React.RefObject<HTMLInputElement | null>;
   onImageFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  // PDF attachment support
+  attachedPdfs?: import('@/components/ui/PdfAttachmentPreview').AttachedPdf[];
+  onRemovePdf?: (index: number) => void;
+  onOpenPdfPicker?: () => void;
+  canAddMorePdfs?: boolean;
+  pdfInputRef?: React.RefObject<HTMLInputElement | null>;
+  onPdfFileChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function TaskInputBar({
@@ -64,11 +73,17 @@ export function TaskInputBar({
   canAddMoreImages = true,
   imageInputRef,
   onImageFileChange,
+  attachedPdfs = [],
+  onRemovePdf,
+  onOpenPdfPicker,
+  canAddMorePdfs = true,
+  pdfInputRef,
+  onPdfFileChange,
 }: TaskInputBarProps) {
   const { t } = useTranslation('common');
   const isInputDisabled = disabled || isLoading;
   const isOverLimit = value.length > PROMPT_DEFAULT_MAX_LENGTH;
-  const canSubmit = (!!value.trim() || attachedImages.length > 0) && !disabled && !isOverLimit;
+  const canSubmit = (!!value.trim() || attachedImages.length > 0 || attachedPdfs.length > 0) && !disabled && !isOverLimit;
   const isSubmitDisabled = !isLoading && (!canSubmit || isInputDisabled);
   const submitLabel = isLoading ? t('buttons.stop') : t('buttons.submit');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -176,7 +191,7 @@ export function TaskInputBar({
         </Alert>
       )}
 
-      {/* Hidden file input */}
+      {/* Hidden file input for images */}
       {imageInputRef && onImageFileChange && (
         <input
           ref={imageInputRef as React.RefObject<HTMLInputElement>}
@@ -189,18 +204,37 @@ export function TaskInputBar({
         />
       )}
 
+      {/* Hidden file input for PDFs */}
+      {pdfInputRef && onPdfFileChange && (
+        <input
+          ref={pdfInputRef as React.RefObject<HTMLInputElement>}
+          type="file"
+          accept="application/pdf"
+          multiple
+          className="hidden"
+          onChange={onPdfFileChange}
+          aria-label="Attach PDFs"
+        />
+      )}
+
       <div
         className="rounded-xl border border-border bg-card shadow-sm transition-all duration-200 ease-navigator cursor-text focus-within:border-primary/30 focus-within:shadow-md"
         onClick={() => textareaRef.current?.focus()}
         onDragOver={handleDragOver}
         onDrop={onImageDrop}
       >
-        {/* Image previews */}
+        {/* Previews */}
         <AnimatePresence>
           {attachedImages.length > 0 && (
             <ImageAttachmentPreview
               images={attachedImages}
-              onRemove={onRemoveImage ?? (() => {})}
+              onRemove={onRemoveImage ?? (() => { })}
+            />
+          )}
+          {attachedPdfs.length > 0 && (
+            <PdfAttachmentPreview
+              pdfs={attachedPdfs}
+              onRemove={onRemovePdf ?? (() => { })}
             />
           )}
         </AnimatePresence>
@@ -243,10 +277,32 @@ export function TaskInputBar({
               </Tooltip>
             )}
 
-            {/* Badge showing number of images attached */}
-            {attachedImages.length > 0 && (
+            {/* PDF upload button */}
+            {onOpenPdfPicker && canAddMorePdfs && !isInputDisabled && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={onOpenPdfPicker}
+                    className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                    aria-label="Attach PDF"
+                  >
+                    <FilePdf className="h-4 w-4" weight="light" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span>Attach PDF (or drop)</span>
+                </TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Badge showing number of attachments */}
+            {(attachedImages.length > 0 || attachedPdfs.length > 0) && (
               <span className="text-[10px] text-muted-foreground tabular-nums">
-                {attachedImages.length} image{attachedImages.length !== 1 ? 's' : ''} attached
+                {[
+                  attachedImages.length > 0 ? `${attachedImages.length} image${attachedImages.length !== 1 ? 's' : ''}` : null,
+                  attachedPdfs.length > 0 ? `${attachedPdfs.length} PDF${attachedPdfs.length !== 1 ? 's' : ''}` : null
+                ].filter(Boolean).join(', ')} attached
               </span>
             )}
           </div>
@@ -291,13 +347,12 @@ export function TaskInputBar({
                     onSubmit();
                   }}
                   disabled={isSubmitDisabled || speechInput.isRecording}
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-200 ease-navigator ${
-                    isLoading
-                      ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                      : isSubmitDisabled || speechInput.isRecording
-                        ? 'bg-muted text-muted-foreground/60'
-                        : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  }`}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-200 ease-navigator ${isLoading
+                    ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                    : isSubmitDisabled || speechInput.isRecording
+                      ? 'bg-muted text-muted-foreground/60'
+                      : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    }`}
                 >
                   {isLoading ? (
                     <span className="block h-[10px] w-[10px] rounded-[1.5px] bg-destructive-foreground" />
@@ -310,7 +365,7 @@ export function TaskInputBar({
                 <span>
                   {isOverLimit
                     ? t('buttons.messageTooLong')
-                    : !value.trim() && attachedImages.length === 0
+                    : !value.trim() && attachedImages.length === 0 && attachedPdfs.length === 0
                       ? t('buttons.enterMessage')
                       : submitLabel}
                 </span>
