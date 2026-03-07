@@ -420,13 +420,13 @@ const navigatorAppAPI = {
     mimeType?: string,
   ): Promise<
     | {
-      success: true;
-      result: { text: string; confidence?: number; duration: number; timestamp: number };
-    }
+        success: true;
+        result: { text: string; confidence?: number; duration: number; timestamp: number };
+      }
     | {
-      success: false;
-      error: { code: string; message: string };
-    }
+        success: false;
+        error: { code: string; message: string };
+      }
   > => ipcRenderer.invoke('speech:transcribe', audioData, mimeType),
 
   // Skills management
@@ -469,13 +469,6 @@ const navigatorAppAPI = {
       ipcRenderer.removeListener('auth:mcp-callback', listener);
     };
   },
-
-  // File utilities
-  saveImageToDisk: (
-    base64Data: string,
-    mimeType: string,
-  ): Promise<{ success: true; filePath: string } | { success: false; error: string }> =>
-    ipcRenderer.invoke('file:save-image', base64Data, mimeType),
 
   // Telegram Bot
   telegramSetToken: (token: string): Promise<{ username: string; firstName: string }> =>

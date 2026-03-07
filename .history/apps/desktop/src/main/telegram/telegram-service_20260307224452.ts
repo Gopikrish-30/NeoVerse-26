@@ -10,7 +10,7 @@ import {
   denyPendingPairing,
   getPendingPairing,
 } from './telegram-auth';
-import type { TelegramPairing } from './telegram-auth';
+import type { TelegramPairing, PendingPairingRequest } from './telegram-auth';
 
 const TELEGRAM_TOKEN_STORAGE_KEY = 'telegram:bot-token';
 const TELEGRAM_PAIRING_STORAGE_KEY = 'telegram:pairing';
@@ -235,7 +235,7 @@ export class TelegramService {
    * Deny a pending pairing request. Notifies the Telegram user.
    */
   async denyPairing(requestId: string): Promise<void> {
-    const pending = getPendingPairing();
+    const pending = getPendingPairingRequest();
     if (!pending || pending.id !== requestId) {
       throw new Error('Pairing request not found or expired.');
     }
@@ -271,7 +271,7 @@ export class TelegramService {
       status.lastActiveAt = this.pairing.lastActiveAt;
     }
 
-    const pending = getPendingPairing();
+    const pending = getPendingPairingRequest();
     if (pending) {
       status.pendingPairingRequest = {
         id: pending.id,
@@ -279,8 +279,8 @@ export class TelegramService {
         userId: pending.userId,
         username: pending.username,
         firstName: pending.firstName,
-        requestedAt: new Date(pending.requestedAt).toISOString(),
-        expiresAt: new Date(pending.expiresAt).toISOString(),
+        requestedAt: pending.requestedAt,
+        expiresAt: pending.expiresAt,
       };
     }
 
