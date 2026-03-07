@@ -51,6 +51,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
 
 export async function serve(options: ServeOptions = {}): Promise<DevBrowserServer> {
   const port = options.port ?? parseInt(process.env.DEV_BROWSER_PORT || '9224', 10);
+  const host = '127.0.0.1';
   const headless = options.headless ?? false;
   const cdpPort = options.cdpPort ?? parseInt(process.env.DEV_BROWSER_CDP_PORT || '9225', 10);
   const profileDir = options.profileDir ?? process.env.DEV_BROWSER_PROFILE;
@@ -204,8 +205,9 @@ export async function serve(options: ServeOptions = {}): Promise<DevBrowserServe
     res.status(404).json({ error: 'page not found' });
   });
 
-  const server = app.listen(port, () => {
-    console.log(`HTTP API server running on port ${port}`);
+  // Bind only to loopback to avoid exposing the control API on external interfaces.
+  const server = app.listen(port, host, () => {
+    console.log(`HTTP API server running on http://${host}:${port}`);
   });
 
   const connections = new Set<Socket>();

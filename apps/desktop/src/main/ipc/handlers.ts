@@ -3,6 +3,7 @@ import { ipcMain, BrowserWindow, shell, dialog, nativeTheme } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';
 import { URL } from 'url';
 import fs from 'fs';
+import { validateGeneralExternalUrl, validateOAuthUrl } from '../security/url-validation';
 import path from 'path';
 
 import {
@@ -1024,10 +1025,10 @@ export function registerIPCHandlers(): void {
 
   handle('shell:open-external', async (_event: IpcMainInvokeEvent, url: string) => {
     try {
-      validateHttpUrl(url, 'External URL');
+      validateGeneralExternalUrl(url);
       await shell.openExternal(url);
     } catch (error) {
-      console.error('Failed to open external URL:', error);
+      console.error('[Security] Failed to open external URL:', error);
       throw error;
     }
   });
@@ -1325,6 +1326,7 @@ export function registerIPCHandlers(): void {
       scope: metadata.scopesSupported?.join(' '),
     });
 
+    validateOAuthUrl(authUrl);
     await shell.openExternal(authUrl);
 
     return { state, authUrl };

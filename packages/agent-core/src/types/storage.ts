@@ -26,6 +26,10 @@ export interface StorageOptions {
   secureStorageAppId?: string;
   /** File name for the encrypted secure storage file */
   secureStorageFileName?: string;
+  /** Optional OS-level encryption for master key (e.g., Electron safeStorage) */
+  osEncrypt?: (plaintext: Buffer) => Buffer;
+  /** Optional OS-level decryption for master key (e.g., Electron safeStorage) */
+  osDecrypt?: (ciphertext: Buffer) => Buffer;
 }
 
 /** A persisted task record from the database */

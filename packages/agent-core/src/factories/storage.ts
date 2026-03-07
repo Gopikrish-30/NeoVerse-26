@@ -56,17 +56,17 @@ import {
   getConnectedProviderIds,
 } from '../storage/repositories/providerSettings.js';
 import {
-  getAllConnectors,
-  getEnabledConnectors,
-  getConnectorById,
-  upsertConnector,
-  setConnectorEnabled,
-  setConnectorStatus,
-  deleteConnector,
-  clearAllConnectors,
+  getAllConnectors as repoGetAllConnectors,
+  getEnabledConnectors as repoGetEnabledConnectors,
+  getConnectorById as repoGetConnectorById,
+  upsertConnector as repoUpsertConnector,
+  setConnectorEnabled as repoSetConnectorEnabled,
+  setConnectorStatus as repoSetConnectorStatus,
+  deleteConnector as repoDeleteConnector,
+  clearAllConnectors as repoClearAllConnectors,
 } from '../storage/repositories/connectors.js';
 import { SecureStorage } from '../internal/classes/SecureStorage.js';
-import type { OAuthTokens } from '../common/types/connector.js';
+import type { McpConnector, OAuthTokens } from '../common/types/connector.js';
 import type { StorageAPI, StorageOptions } from '../types/storage.js';
 
 export function createStorage(options: StorageOptions = {}): StorageAPI {
@@ -76,6 +76,8 @@ export function createStorage(options: StorageOptions = {}): StorageAPI {
     userDataPath,
     secureStorageAppId = 'ai.navigator.desktop',
     secureStorageFileName,
+    osEncrypt,
+    osDecrypt,
   } = options;
 
   const storagePath = userDataPath || process.cwd();
@@ -83,7 +85,78 @@ export function createStorage(options: StorageOptions = {}): StorageAPI {
     storagePath,
     appId: secureStorageAppId,
     ...(secureStorageFileName && { fileName: secureStorageFileName }),
+    ...(osEncrypt && { osEncrypt }),
+    ...(osDecrypt && { osDecrypt }),
   });
+
+  const connectorTokensKey = (connectorId: string): string => `connector-tokens:${connectorId}`;
+  const connectorClientSecretKey = (connectorId: string): string =>
+    `connector-client-secret:${connectorId}`;
+
+  function stripClientSecret(connector: McpConnector): McpConnector {
+    const clientRegistration = connector.clientRegistration;
+    if (!clientRegistration?.clientSecret) {
+      return connector;
+    }
+
+    const { clientSecret: _unused, ...sanitizedClientRegistration } = clientRegistration;
+
+    return {
+      ...connector,
+      clientRegistration: sanitizedClientRegistration,
+    };
+  }
+
+  function hydrateClientSecret(connector: McpConnector | null): McpConnector | null {
+    if (!connector || !connector.clientRegistration) {
+      return connector;
+    }
+
+    const storedSecret = secureStorage.get(connectorClientSecretKey(connector.id));
+    if (!storedSecret) {
+      return connector;
+    }
+
+    return {
+      ...connector,
+      clientRegistration: {
+        ...connector.clientRegistration,
+        clientSecret: storedSecret,
+      },
+    };
+  }
+
+  function migrateConnectorClientSecretsToSecureStorage(): void {
+    const connectors = repoGetAllConnectors();
+    let migratedCount = 0;
+
+    for (const connector of connectors) {
+      const clientSecret = connector.clientRegistration?.clientSecret;
+      if (!clientSecret) {
+        continue;
+      }
+
+      secureStorage.set(connectorClientSecretKey(connector.id), clientSecret);
+      repoUpsertConnector(stripClientSecret(connector));
+      migratedCount += 1;
+    }
+
+    if (migratedCount > 0) {
+      console.log(`[Storage] Migrated ${migratedCount} connector client secret(s) to secure storage`);
+    }
+  }
+
+  function clearConnectorSecretsFromSecureStorage(): void {
+    const credentials = secureStorage.listStoredCredentials();
+    for (const { account } of credentials) {
+      if (
+        account.startsWith('connector-client-secret:') ||
+        account.startsWith('connector-tokens:')
+      ) {
+        secureStorage.delete(account);
+      }
+    }
+  }
 
   let initialized = false;
 
@@ -141,18 +214,31 @@ export function createStorage(options: StorageOptions = {}): StorageAPI {
     getConnectedProviderIds: () => getConnectedProviderIds(),
 
     // Connectors
-    getAllConnectors: () => getAllConnectors(),
-    getEnabledConnectors: () => getEnabledConnectors(),
-    getConnectorById: (id) => getConnectorById(id),
-    upsertConnector: (connector) => upsertConnector(connector),
-    setConnectorEnabled: (id, enabled) => setConnectorEnabled(id, enabled),
-    setConnectorStatus: (id, status) => setConnectorStatus(id, status),
-    deleteConnector: (id) => deleteConnector(id),
-    clearAllConnectors: () => clearAllConnectors(),
+    getAllConnectors: () => repoGetAllConnectors().map(stripClientSecret),
+    getEnabledConnectors: () => repoGetEnabledConnectors().map(stripClientSecret),
+    getConnectorById: (id) => hydrateClientSecret(repoGetConnectorById(id)),
+    upsertConnector: (connector) => {
+      const clientSecret = connector.clientRegistration?.clientSecret;
+      if (clientSecret) {
+        secureStorage.set(connectorClientSecretKey(connector.id), clientSecret);
+      }
+      repoUpsertConnector(stripClientSecret(connector));
+    },
+    setConnectorEnabled: (id, enabled) => repoSetConnectorEnabled(id, enabled),
+    setConnectorStatus: (id, status) => repoSetConnectorStatus(id, status),
+    deleteConnector: (id) => {
+      secureStorage.delete(connectorClientSecretKey(id));
+      secureStorage.delete(connectorTokensKey(id));
+      repoDeleteConnector(id);
+    },
+    clearAllConnectors: () => {
+      clearConnectorSecretsFromSecureStorage();
+      repoClearAllConnectors();
+    },
     storeConnectorTokens: (connectorId, tokens) =>
-      secureStorage.set(`connector-tokens:${connectorId}`, JSON.stringify(tokens)),
+      secureStorage.set(connectorTokensKey(connectorId), JSON.stringify(tokens)),
     getConnectorTokens: (connectorId) => {
-      const stored = secureStorage.get(`connector-tokens:${connectorId}`);
+      const stored = secureStorage.get(connectorTokensKey(connectorId));
       if (!stored) return null;
       try {
         return JSON.parse(stored) as OAuthTokens;
@@ -161,7 +247,7 @@ export function createStorage(options: StorageOptions = {}): StorageAPI {
         return null;
       }
     },
-    deleteConnectorTokens: (connectorId) => secureStorage.delete(`connector-tokens:${connectorId}`),
+    deleteConnectorTokens: (connectorId) => secureStorage.delete(connectorTokensKey(connectorId)),
 
     // Secure Storage
     storeApiKey: (provider, apiKey) => secureStorage.storeApiKey(provider, apiKey),
@@ -181,6 +267,7 @@ export function createStorage(options: StorageOptions = {}): StorageAPI {
       }
       const dbPath = databasePath || `${storagePath}/agent-core.db`;
       initializeDatabase({ databasePath: dbPath, runMigrations });
+      migrateConnectorClientSecretsToSecureStorage();
       initialized = true;
     },
     close() {

@@ -11,6 +11,7 @@ const THOUGHT_STREAM_PORT = process.env.THOUGHT_STREAM_PORT || '9228';
 const CHECKPOINT_URL = `http://127.0.0.1:${THOUGHT_STREAM_PORT}/checkpoint`;
 const THOUGHT_STREAM_TASK_ID =
   process.env.THOUGHT_STREAM_TASK_ID || process.env.NAVIGATOR_TASK_ID || '';
+const LOCAL_API_AUTH_TOKEN = process.env.LOCAL_API_AUTH_TOKEN || '';
 
 interface ReportCheckpointInput {
   status: 'progress' | 'complete' | 'stuck';
@@ -88,7 +89,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request): Promise<CallToo
     try {
       const response = await fetch(CHECKPOINT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(LOCAL_API_AUTH_TOKEN ? { 'X-Navigator-Auth': LOCAL_API_AUTH_TOKEN } : {}),
+        },
         body: JSON.stringify({
           taskId: THOUGHT_STREAM_TASK_ID,
           status,
