@@ -3,6 +3,8 @@ import { ipcMain, BrowserWindow, shell, dialog, nativeTheme } from 'electron';
 import type { IpcMainInvokeEvent } from 'electron';
 import { URL } from 'url';
 import fs from 'fs';
+import path from 'path';
+
 import {
   isOpenCodeCliInstalled,
   getOpenCodeCliVersion,
@@ -527,7 +529,7 @@ export function registerIPCHandlers(): void {
             zaiRegion:
               provider === 'zai'
                 ? (options?.region as import('@navigator_ai/agent-core').ZaiRegion) ||
-                  'international'
+                'international'
                 : undefined,
           },
         );
@@ -1408,6 +1410,31 @@ export function registerIPCHandlers(): void {
     const telegramService = getTelegramService();
     return telegramService.hasToken();
   });
+
+  handle(
+    'file:save-image',
+    async (
+      _event: IpcMainInvokeEvent,
+      base64Data: string,
+      mimeType: string,
+    ): Promise<{ success: true; filePath: string } | { success: false; error: string }> => {
+      try {
+        const os = await import('os');
+        const extension = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
+        const tempDir = os.tmpdir();
+        const fileName = `navigator-image-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${extension}`;
+        const filePath = path.join(tempDir, fileName);
+        const buffer = Buffer.from(base64Data, 'base64');
+        fs.writeFileSync(filePath, buffer);
+        console.log('[File] Saved image to temp path:', filePath);
+        return { success: true, filePath };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error('[File] Failed to save image:', message);
+        return { success: false, error: message };
+      }
+    },
+  );
 }
 
 // In-memory store for pending OAuth flows (keyed by state parameter)
