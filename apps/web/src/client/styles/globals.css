@@ -202,62 +202,6 @@
 }
 
 /* Placeholder font family for textareas */
-textarea::-webkit-input-placeholder {
-  font-family:
-    'Geist',
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif !important;
-}
-
-textarea:-ms-input-placeholder {
-  font-family:
-    'Geist',
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif !important;
-}
-
-textarea:-moz-placeholder {
-  font-family:
-    'Geist',
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif !important;
-}
-
-textarea::-moz-placeholder {
-  font-family:
-    'Geist',
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif !important;
-}
-
 textarea::placeholder {
   font-family:
     'Geist',
@@ -273,3 +217,15 @@ textarea::placeholder {
 }
 
 /* Component utilities - removed as we're using shadcn components now */
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -137,7 +137,7 @@ export function TaskLauncher() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="fixed inset-0 z-50 bg-white/60 backdrop-blur-[12px]"
+                className="fixed inset-0 z-50 bg-background/60 dark:bg-background/70 backdrop-blur-[12px]"
               />
             </DialogPrimitive.Overlay>
 

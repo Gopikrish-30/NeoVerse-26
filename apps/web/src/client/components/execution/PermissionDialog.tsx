@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { springs } from '../../lib/animations';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -46,6 +47,7 @@ interface PermissionDialogProps {
 }
 
 export function PermissionDialog({ permissionRequest, onRespond }: PermissionDialogProps) {
+  const { t } = useTranslation('execution');
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [customResponse, setCustomResponse] = useState('');
 
@@ -106,12 +108,12 @@ export function PermissionDialog({ permissionRequest, onRespond }: PermissionDia
               )}
             >
               {isDeleteOperation(permissionRequest)
-                ? 'File Deletion Warning'
+                ? t('permission.fileDeleteTitle')
                 : permissionRequest.type === 'file'
-                  ? 'File Permission Required'
+                  ? t('permission.fileTitle')
                   : permissionRequest.type === 'question'
-                    ? permissionRequest.header || 'Question'
-                    : 'Permission Required'}
+                    ? permissionRequest.header || t('permission.questionTitle')
+                    : t('permission.title')}
             </h3>
           </div>
 
@@ -124,8 +126,8 @@ export function PermissionDialog({ permissionRequest, onRespond }: PermissionDia
                       {(() => {
                         const paths = getDisplayFilePaths(permissionRequest);
                         return paths.length > 1
-                          ? `${paths.length} files will be permanently deleted:`
-                          : 'This file will be permanently deleted:';
+                          ? t('permission.deleteWarningMultiple', { count: paths.length })
+                          : t('permission.deleteWarningSingle');
                       })()}
                     </p>
                   </div>
@@ -192,13 +194,13 @@ export function PermissionDialog({ permissionRequest, onRespond }: PermissionDia
                 </div>
 
                 {isDeleteOperation(permissionRequest) && (
-                  <p className="text-sm text-red-600/80 mb-4">This action cannot be undone.</p>
+                  <p className="text-sm text-red-600/80 mb-4">{t('permission.cannotBeUndone')}</p>
                 )}
 
                 {permissionRequest.contentPreview && (
                   <details className="mb-4">
                     <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                      Preview content
+                      {t('permission.previewContent')}
                     </summary>
                     <pre className="mt-2 p-2 rounded bg-muted text-xs overflow-x-auto max-h-32 overflow-y-auto">
                       {permissionRequest.contentPreview}
@@ -252,7 +254,9 @@ export function PermissionDialog({ permissionRequest, onRespond }: PermissionDia
                 {permissionRequest.options && permissionRequest.options.length > 0 && (
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex-1 h-px bg-border" />
-                    <span className="text-xs text-muted-foreground">or type your own</span>
+                    <span className="text-xs text-muted-foreground">
+                      {t('permission.orTypeOwn')}
+                    </span>
                     <div className="flex-1 h-px bg-border" />
                   </div>
                 )}
@@ -266,7 +270,7 @@ export function PermissionDialog({ permissionRequest, onRespond }: PermissionDia
                       e.target.style.height = 'auto';
                       e.target.style.height = `${e.target.scrollHeight}px`;
                     }}
-                    placeholder="Enter a different option..."
+                    placeholder={t('permission.enterDifferentOption')}
                     aria-label="Custom response"
                     maxLength={10000}
                     rows={1}
@@ -286,11 +290,13 @@ export function PermissionDialog({ permissionRequest, onRespond }: PermissionDia
             {permissionRequest.type === 'tool' && (
               <>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Allow {permissionRequest.toolName}?
+                  {t('permission.toolQuestion', { toolName: permissionRequest.toolName })}
                 </p>
                 {permissionRequest.toolName && (
                   <div className="mb-4 p-3 rounded-lg bg-muted text-xs font-mono overflow-x-auto">
-                    <p className="text-muted-foreground mb-1">Tool: {permissionRequest.toolName}</p>
+                    <p className="text-muted-foreground mb-1">
+                      {t('permission.tool')}: {permissionRequest.toolName}
+                    </p>
                     <pre className="text-foreground">
                       {JSON.stringify(permissionRequest.toolInput, null, 2)}
                     </pre>
@@ -307,7 +313,9 @@ export function PermissionDialog({ permissionRequest, onRespond }: PermissionDia
               className="flex-1"
               data-testid="permission-deny-button"
             >
-              {permissionRequest.type === 'question' ? 'Cancel' : 'Deny'}
+              {permissionRequest.type === 'question'
+                ? t('common:buttons.cancel')
+                : t('common:buttons.deny')}
             </Button>
             <Button
               onClick={() => handleRespond(true)}
@@ -324,11 +332,11 @@ export function PermissionDialog({ permissionRequest, onRespond }: PermissionDia
             >
               {isDeleteOperation(permissionRequest)
                 ? getDisplayFilePaths(permissionRequest).length > 1
-                  ? 'Delete All'
-                  : 'Delete'
+                  ? t('common:buttons.deleteAll')
+                  : t('common:buttons.delete')
                 : permissionRequest.type === 'question'
-                  ? 'Submit'
-                  : 'Allow'}
+                  ? t('common:buttons.submit')
+                  : t('common:buttons.allow')}
             </Button>
           </div>
         </Card>

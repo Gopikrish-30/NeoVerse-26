@@ -1,5 +1,4 @@
 // =============================================================================
-console.log('[agent-core] u2d sync test');
 // @navigator/core - Public API (v0.4.0)
 // =============================================================================
 // This file explicitly exports the public API for the @navigator/core package.
