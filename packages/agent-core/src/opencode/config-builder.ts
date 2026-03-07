@@ -544,10 +544,7 @@ export async function buildProviderConfigs(
 
   // Groq provider
   const groqProvider = providerSettings.connectedProviders.groq;
-  if (
-    groqProvider?.connectionStatus === 'connected' &&
-    groqProvider.selectedModelId
-  ) {
+  if (groqProvider?.connectionStatus === 'connected' && groqProvider.selectedModelId) {
     const groqApiKey = getApiKey('groq');
     const modelId = groqProvider.selectedModelId.replace(/^groq\//, '');
     providerConfigs.push({

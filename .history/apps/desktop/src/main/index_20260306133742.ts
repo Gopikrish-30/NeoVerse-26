@@ -344,7 +344,11 @@ if (!gotTheLock) {
           try {
             const metrics = app.getAppMetrics();
             for (const metric of metrics) {
-              collector.log('INFO', 'main', `[memory] pid=${metric.pid} type=${metric.type} workingSetSize=${metric.memory.workingSetSize}kB`);
+              collector.log(
+                'INFO',
+                'main',
+                `[memory] pid=${metric.pid} type=${metric.type} workingSetSize=${metric.memory.workingSetSize}kB`,
+              );
             }
           } catch (err) {
             console.error('[Main] Memory log failed:', err);

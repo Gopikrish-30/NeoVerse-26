@@ -242,7 +242,9 @@ describe('Preload Script Integration', () => {
       });
 
       it('setOnboardingComplete should invoke onboarding:set-complete', async () => {
-        await (capturedNavigatorAppAPI.setOnboardingComplete as (c: boolean) => Promise<void>)(true);
+        await (capturedNavigatorAppAPI.setOnboardingComplete as (c: boolean) => Promise<void>)(
+          true,
+        );
         expect(mockInvoke).toHaveBeenCalledWith('onboarding:set-complete', true);
       });
     });
@@ -315,7 +317,9 @@ describe('Preload Script Integration', () => {
 
     it('onTaskProgress should subscribe to task:progress', () => {
       const callback = vi.fn();
-      (capturedNavigatorAppAPI.onTaskProgress as (cb: (e: unknown) => void) => () => void)(callback);
+      (capturedNavigatorAppAPI.onTaskProgress as (cb: (e: unknown) => void) => () => void)(
+        callback,
+      );
       expect(mockOn).toHaveBeenCalledWith('task:progress', expect.any(Function));
     });
 

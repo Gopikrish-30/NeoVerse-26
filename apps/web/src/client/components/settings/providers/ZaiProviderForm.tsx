@@ -5,11 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getNavigatorApp } from '@/lib/navigator-app';
 import { settingsVariants, settingsTransitions } from '@/lib/animations';
-import type {
-  ConnectedProvider,
-  ZaiCredentials,
-  ZaiRegion,
-} from '@navigator_ai/agent-core/common';
+import type { ConnectedProvider, ZaiCredentials, ZaiRegion } from '@navigator_ai/agent-core/common';
 import { PROVIDER_META, DEFAULT_PROVIDERS } from '@navigator_ai/agent-core/common';
 import {
   ModelSelector,
