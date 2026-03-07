@@ -1,6 +1,7 @@
 import type { Task, TaskMessage, TaskStatus, TaskAttachment } from '../../common/types/task.js';
 import type { TodoItem } from '../../common/types/todo.js';
 import { getDatabase } from '../database.js';
+import { maskPii } from '../../utils/mask-pii.js';
 
 export interface StoredTask {
   id: string;
@@ -133,8 +134,8 @@ export function saveTask(task: Task): void {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(
       task.id,
-      task.prompt,
-      task.summary || null,
+      maskPii(task.prompt),
+      task.summary ? maskPii(task.summary) : null,
       task.status,
       task.sessionId || null,
       task.createdAt,
@@ -160,9 +161,9 @@ export function saveTask(task: Task): void {
         msg.id,
         task.id,
         msg.type,
-        msg.content,
+        maskPii(msg.content),
         msg.toolName || null,
-        msg.toolInput ? JSON.stringify(msg.toolInput) : null,
+        msg.toolInput ? maskPii(JSON.stringify(msg.toolInput)) : null,
         msg.timestamp,
         sortOrder++,
       );
@@ -214,9 +215,9 @@ export function addTaskMessage(taskId: string, message: TaskMessage): void {
       message.id,
       taskId,
       message.type,
-      message.content,
+      maskPii(message.content),
       message.toolName || null,
-      message.toolInput ? JSON.stringify(message.toolInput) : null,
+      message.toolInput ? maskPii(JSON.stringify(message.toolInput)) : null,
       message.timestamp,
       sortOrder,
     );
@@ -240,7 +241,7 @@ export function updateTaskSessionId(taskId: string, sessionId: string): void {
 
 export function updateTaskSummary(taskId: string, summary: string): void {
   const db = getDatabase();
-  db.prepare('UPDATE tasks SET summary = ? WHERE id = ?').run(summary, taskId);
+  db.prepare('UPDATE tasks SET summary = ? WHERE id = ?').run(maskPii(summary), taskId);
 }
 
 export function deleteTask(taskId: string): void {

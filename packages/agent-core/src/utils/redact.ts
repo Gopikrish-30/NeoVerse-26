@@ -1,3 +1,5 @@
+import { maskPii } from './mask-pii.js';
+
 const REDACTION_PATTERNS = [
   /sk-[a-zA-Z0-9]{20,}/g,
   /xai-[a-zA-Z0-9]{20,}/g,
@@ -17,6 +19,9 @@ export function redact(text: string): string {
       return `${prefix}[REDACTED]`;
     });
   }
+
+  // Also mask PII (phone, email, OTP, card, SSN, address)
+  result = maskPii(result);
 
   return result;
 }
