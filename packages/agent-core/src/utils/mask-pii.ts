@@ -127,13 +127,21 @@ export function maskPii(text: string): string {
   // 6. Street addresses (before phone, since addresses can contain numbers)
   result = result.replace(STREET_ADDRESS_PATTERN, '[ADDRESS]');
 
-  // 7. UK postcodes
+  // 7. UK postcodes (keep before phone)
   result = result.replace(UK_POSTCODE_PATTERN, '[ADDRESS]');
 
   // 8. Phone numbers (with digit-count validation)
   result = result.replace(PHONE_PATTERN, (match) => {
+    // Bypass exactly 5-dash-4 formats so they can be picked up by ZIP masks below
+    if (/^\d{5}-\d{4}$/.test(match.trim())) {
+      return match;
+    }
     return isLikelyPhone(match) ? '[PHONE]' : match;
   });
+
+  // 9. Standard 5/6 digit postal codes (after phone to avoid breaking spaced numbers)
+  result = result.replace(ZIP_CODE_PATTERN, '[ZIP]');
+  result = result.replace(INDIAN_PIN_PATTERN, '[ZIP]');
 
   return result;
 }
