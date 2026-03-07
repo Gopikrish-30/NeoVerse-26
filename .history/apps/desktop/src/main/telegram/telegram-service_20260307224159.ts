@@ -8,9 +8,9 @@ import {
   clearPin,
   approvePendingPairing,
   denyPendingPairing,
-  getPendingPairing,
+  getPendingPairingRequest,
 } from './telegram-auth';
-import type { TelegramPairing } from './telegram-auth';
+import type { TelegramPairing, PendingPairingRequest } from './telegram-auth';
 
 const TELEGRAM_TOKEN_STORAGE_KEY = 'telegram:bot-token';
 const TELEGRAM_PAIRING_STORAGE_KEY = 'telegram:pairing';
@@ -215,40 +215,6 @@ export class TelegramService {
   }
 
   /**
-   * Approve a pending pairing request. Establishes the pairing and notifies the Telegram user.
-   */
-  async approvePairing(requestId: string): Promise<void> {
-    const pairing = approvePendingPairing(requestId);
-    if (!pairing) {
-      throw new Error('Pairing request not found or expired.');
-    }
-
-    this.handlePairingChange(pairing);
-
-    if (this.bot) {
-      this.bot.updatePairing(pairing);
-      await this.bot.notifyPairingApproved(pairing.chatId);
-    }
-  }
-
-  /**
-   * Deny a pending pairing request. Notifies the Telegram user.
-   */
-  async denyPairing(requestId: string): Promise<void> {
-    const pending = getPendingPairing();
-    if (!pending || pending.id !== requestId) {
-      throw new Error('Pairing request not found or expired.');
-    }
-
-    const chatId = pending.chatId;
-    denyPendingPairing(requestId);
-
-    if (this.bot) {
-      await this.bot.notifyPairingDenied(chatId);
-    }
-  }
-
-  /**
    * Get the current status.
    */
   async getStatus(): Promise<TelegramStatus> {
@@ -271,7 +237,7 @@ export class TelegramService {
       status.lastActiveAt = this.pairing.lastActiveAt;
     }
 
-    const pending = getPendingPairing();
+    const pending = getPendingPairingRequest();
     if (pending) {
       status.pendingPairingRequest = {
         id: pending.id,
@@ -279,8 +245,8 @@ export class TelegramService {
         userId: pending.userId,
         username: pending.username,
         firstName: pending.firstName,
-        requestedAt: new Date(pending.requestedAt).toISOString(),
-        expiresAt: new Date(pending.expiresAt).toISOString(),
+        requestedAt: pending.requestedAt,
+        expiresAt: pending.expiresAt,
       };
     }
 

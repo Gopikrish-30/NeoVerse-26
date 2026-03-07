@@ -558,49 +558,6 @@ export class TelegramBot {
     this.pairing = pairing;
   }
 
-  /** Notify Telegram user that pairing was approved */
-  async notifyPairingApproved(chatId: number): Promise<void> {
-    try {
-      await this.bot.api.sendMessage(
-        chatId,
-        '✅ <b>Pairing approved!</b>\n\n' +
-          'This Telegram account is now linked to your Navigator instance.\n\n' +
-          formatWelcome(),
-        { parse_mode: 'HTML' },
-      );
-    } catch (error) {
-      console.error('[TelegramBot] Failed to notify pairing approval:', error);
-    }
-  }
-
-  /** Notify Telegram user that pairing was denied */
-  async notifyPairingDenied(chatId: number): Promise<void> {
-    try {
-      await this.bot.api.sendMessage(
-        chatId,
-        '❌ <b>Pairing denied.</b>\n\nThe desktop user denied your pairing request.',
-        { parse_mode: 'HTML' },
-      );
-    } catch (error) {
-      console.error('[TelegramBot] Failed to notify pairing denial:', error);
-    }
-  }
-
-  /** Notify Telegram user that their session has expired */
-  async notifySessionExpired(chatId: number): Promise<void> {
-    try {
-      await this.bot.api.sendMessage(
-        chatId,
-        '🔒 <b>Session expired.</b>\n\n' +
-          'Your session has expired due to inactivity.\n' +
-          'Please re-pair using /start YOUR_PIN from Navigator Settings.',
-        { parse_mode: 'HTML' },
-      );
-    } catch (error) {
-      console.error('[TelegramBot] Failed to notify session expiry:', error);
-    }
-  }
-
   async getBotInfo(): Promise<{ username: string; firstName: string } | null> {
     try {
       const me = await this.bot.api.getMe();
