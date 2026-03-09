@@ -14,25 +14,6 @@ Navigator is a privacy-first AI automation assistant that runs entirely on your 
 
 </div>
 
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [AI Providers](#ai-providers)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Development](#development)
-- [Testing](#testing)
-- [Building & Packaging](#building--packaging)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [Security](#security)
-- [License](#license)
-
----
 
 ## Overview
 
