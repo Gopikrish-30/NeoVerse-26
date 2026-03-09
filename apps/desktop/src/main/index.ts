@@ -16,6 +16,10 @@ import { fileURLToPath } from 'url';
 const APP_DATA_NAME = 'Navigator';
 app.setPath('userData', path.join(app.getPath('appData'), APP_DATA_NAME));
 
+if (!app.isPackaged) {
+  process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+}
+
 if (process.platform === 'win32') {
   app.setAppUserModelId('ai.navigator.desktop');
 }

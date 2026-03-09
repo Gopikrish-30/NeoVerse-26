@@ -1,0 +1,100 @@
+﻿[2026-03-08T04:15:22.398Z] [INFO] [opencode] [TaskManager] Disposing all tasks (0 active, 0 queued)
+[2026-03-08T04:15:22.398Z] [INFO] [opencode] [TaskManager] All tasks disposed
+[2026-03-08T04:15:22.399Z] [INFO] [main] [OAuthBrowserFlow] Disposing
+[2026-03-08T04:15:22.400Z] [INFO] [main] [DB] Closing database connection
+[2026-03-08T04:15:22.429Z] [INFO] [main] LogCollector shutting down
+[2026-03-08T04:16:05.500Z] [INFO] [main] LogCollector initialized
+[2026-03-08T04:16:05.501Z] [INFO] [env] App starting {"version":"0.3.8","platform":"win32","arch":"x64","nodeVersion":"v22.16.0"}
+[2026-03-08T04:16:05.566Z] [INFO] [main] [Main] Electron app ready, version: 0.3.8
+[2026-03-08T04:16:05.566Z] [INFO] [main] [Migration] Current userData already has data, skipping migration
+[2026-03-08T04:16:05.567Z] [INFO] [main] [DB] Opening database at: C:\Users\logan\AppData\Roaming\Navigator\navigator-dev.db
+[2026-03-08T04:16:05.578Z] [INFO] [main] [Migrations] Stored version: 8, App version: 8
+[2026-03-08T04:16:05.578Z] [INFO] [main] [Migrations] Database is up to date
+[2026-03-08T04:16:05.578Z] [INFO] [main] [DB] Database initialized and migrations complete
+[2026-03-08T04:16:05.579Z] [INFO] [main] [LegacyImport] Legacy import already completed, skipping
+[2026-03-08T04:16:05.580Z] [INFO] [main] [SkillsManager] Initializing...
+[2026-03-08T04:16:05.580Z] [INFO] [main] [SkillsManager] Initializing...
+[2026-03-08T04:16:05.581Z] [INFO] [main] [SkillsManager] Resyncing skills...
+[2026-03-08T04:16:05.592Z] [INFO] [main] [SkillsManager] Synced 6 skills
+[2026-03-08T04:16:05.593Z] [INFO] [main] [SkillsManager] Initialized
+[2026-03-08T04:16:05.593Z] [INFO] [main] [SkillsManager] Initialized
+[2026-03-08T04:16:05.595Z] [INFO] [main] [Main] IPC handlers registered
+[2026-03-08T04:16:05.595Z] [INFO] [main] [Main] Creating main application window
+[2026-03-08T04:16:05.601Z] [INFO] [main] [Main] Using preload script: D:\Neo Verse\Navigator-main\apps\desktop\dist-electron\preload\index.cjs
+[2026-03-08T04:16:05.689Z] [INFO] [main] [Main] Loading from router URL: http://localhost:5173
+[2026-03-08T04:16:05.725Z] [INFO] [main] [Thought Stream API] Server listening on port 9228
+[2026-03-08T04:16:13.394Z] [INFO] [main] [CLI Resolver] Using OpenCode CLI executable via launcher package: D:\Neo Verse\Navigator-main\node_modules\.pnpm\opencode-ai@1.2.10\node_modules\opencode-windows-x64\bin\opencode.exe
+[2026-03-08T04:16:13.397Z] [INFO] [main] [Permission API] Server listening on port 9226
+[2026-03-08T04:16:13.398Z] [INFO] [main] [Question API] Server listening on port 9227
+[2026-03-08T04:16:13.399Z] [INFO] [opencode] [TaskManager] Executing task task_[PHONE]_vrbr8ri. Active tasks: 1
+[2026-03-08T04:16:13.419Z] [INFO] [main] [Browser] Browser check: Chrome=false, Playwright=true
+[2026-03-08T04:16:13.533Z] [INFO] [main] [Summarizer] All providers failed, using truncated prompt
+[2026-03-08T04:16:14.005Z] [INFO] [main] [Browser] ========== DEV-BROWSER SERVER STARTUP ==========
+[2026-03-08T04:16:14.005Z] [INFO] [main] [Browser] Node executable: D:\Neo Verse\Navigator-main\apps\desktop\resources\nodejs\win32-x64\node-v20.18.1-win-x64\node.exe
+[2026-03-08T04:16:14.005Z] [INFO] [main] [Browser] Server script: D:\Neo Verse\Navigator-main\packages\agent-core\mcp-tools\dev-browser\server.cjs
+[2026-03-08T04:16:14.005Z] [INFO] [main] [Browser] Working directory: D:\Neo Verse\Navigator-main\packages\agent-core\mcp-tools\dev-browser
+[2026-03-08T04:16:14.006Z] [INFO] [main] [Browser] Script exists: true
+[2026-03-08T04:16:14.007Z] [INFO] [main] [Browser] CWD exists: true
+[2026-03-08T04:16:20.327Z] [INFO] [main] [Browser] Dev-browser server spawn initiated (PID: [ZIP] )
+[2026-03-08T04:16:20.328Z] [INFO] [main] [Browser] Waiting for dev-browser server to be ready (max 30000ms)...
+[2026-03-08T04:16:20.498Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.492Z] Starting dev-browser server launcher...
+[2026-03-08T04:16:20.499Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.496Z]   skillDir: D:\Neo Verse\Navigator-main\packages\agent-core\mcp-tools\dev-browser
+[2026-03-08T04:16:20.500Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.497Z]   isWindows: true
+[2026-03-08T04:16:20.500Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.497Z]   headless: false
+[2026-03-08T04:16:20.500Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.497Z]   NODE_BIN_PATH: D:\Neo Verse\Navigator-main\apps\desktop\resources\nodejs\win32-x64\node-v20.18.1-win-x64
+[2026-03-08T04:16:20.501Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.497Z]   PATH (first 500 chars): D:\Neo Verse\Navigator-main\apps\desktop\resources\nodejs\win32-x64\node-v20.18.1-win-x64;./node_modules/.bin;D:\Neo Verse\Navigator-main\node_modules\.bin;D:\Neo Verse\Navigator-main\apps\desktop\node_modules\.bin;C:\Users\logan\AppData\Local\nvm\v20.17.0\node_modules\pnpm\dist\node-gyp-bin;D:\Neo Verse\Navigator-main\node_modules\.bin;D:\Neo Verse\Navigator-main\node_modules\.bin;C:\Users\logan\AppData\Local\nvm\v20.17.0\node_modules\pnpm\dist\node-gyp-bin;D:\Neo Verse\Navigator-main\node_modu
+[2026-03-08T04:16:20.501Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.498Z]   Using bundled node: D:\Neo Verse\Navigator-main\apps\desktop\resources\nodejs\win32-x64\node-v20.18.1-win-x64\node.exe
+[2026-03-08T04:16:20.501Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.498Z]   Using bundled server: D:\Neo Verse\Navigator-main\packages\agent-core\mcp-tools\dev-browser\dist\start-server.mjs
+[2026-03-08T04:16:20.502Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.500Z] Spawning: D:\Neo Verse\Navigator-main\apps\desktop\resources\nodejs\win32-x64\node-v20.18.1-win-x64\node.exe D:\Neo Verse\Navigator-main\packages\agent-core\mcp-tools\dev-browser\dist\start-server.mjs
+[2026-03-08T04:16:20.502Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.500Z]   cwd: D:\Neo Verse\Navigator-main\packages\agent-core\mcp-tools\dev-browser
+[2026-03-08T04:16:20.514Z] [INFO] [browser] [DevBrowser stderr] [dev-browser server.cjs 2026-03-08T04:16:20.512Z] Spawn initiated, waiting for process...
+[2026-03-08T04:16:23.326Z] [INFO] [browser] [DevBrowser stdout] Creating data directory: C:\Users\logan\AppData\Roaming\Navigator\dev-browser
+[2026-03-08T04:16:23.330Z] [INFO] [browser] [DevBrowser stdout] Checking for existing servers...
+[2026-03-08T04:16:23.445Z] [INFO] [browser] [DevBrowser stdout] Starting dev browser server...
+[2026-03-08T04:16:23.446Z] [INFO] [browser] [DevBrowser stdout] Trying to use system Chrome...
+[2026-03-08T04:16:23.459Z] [INFO] [browser] [DevBrowser stdout] System Chrome not available, falling back to Playwright Chromium...
+[2026-03-08T04:16:23.459Z] [INFO] [browser] [DevBrowser stdout] Launching browser with Playwright Chromium...
+[2026-03-08T04:16:24.236Z] [INFO] [browser] [DevBrowser stdout] Browser launched with Playwright Chromium
+[2026-03-08T04:16:24.236Z] [INFO] [browser] [DevBrowser stdout] Browser launched with persistent profile...
+[2026-03-08T04:16:24.271Z] [INFO] [browser] [DevBrowser stdout] CDP WebSocket endpoint: ws://127.0.0.1:9225/devtools/browser/9526b308-113c-480e-b681-8c1d6798aa6b
+[2026-03-08T04:16:24.281Z] [INFO] [browser] [DevBrowser stdout] Dev browser server started
+[2026-03-08T04:16:24.281Z] [INFO] [browser] [DevBrowser stdout]   WebSocket: ws://127.0.0.1:9225/devtools/browser/9526b308-113c-480e-b681-8c1d6798aa6b
+[2026-03-08T04:16:24.281Z] [INFO] [browser] [DevBrowser stdout]   Tmp directory: C:\Users\logan\AppData\Roaming\Navigator\dev-browser\tmp
+[2026-03-08T04:16:24.283Z] [INFO] [browser] [DevBrowser stdout]   Profile directory: C:\Users\logan\AppData\Roaming\Navigator\dev-browser\profiles
+[2026-03-08T04:16:24.283Z] [INFO] [browser] [DevBrowser stdout] Ready
+[2026-03-08T04:16:24.283Z] [INFO] [browser] [DevBrowser stdout] Press Ctrl+C to stop
+[2026-03-08T04:16:24.285Z] [INFO] [browser] [DevBrowser stdout] HTTP API server running on http://127.0.0.1:9224
+[2026-03-08T04:16:24.525Z] [INFO] [main] [Browser] Dev-browser server ready after 9 attempts (4197ms)
+[2026-03-08T04:16:24.525Z] [INFO] [main] [Browser] ========== END DEV-BROWSER SERVER STARTUP ==========
+[2026-03-08T04:16:24.529Z] [INFO] [main] [LogWatcher] Watching log file: C:\Users\logan\.local\share\opencode\log\2026-03-08T034951.log
+[2026-03-08T04:16:24.534Z] [INFO] [opencode] [OpenCode Config] MCP tools path: D:\Neo Verse\Navigator-main\packages\agent-core\mcp-tools
+[2026-03-08T04:16:24.534Z] [INFO] [opencode] [OpenCode Config] User data path: C:\Users\logan\AppData\Roaming\Navigator
+[2026-03-08T04:16:24.545Z] [INFO] [opencode] [OpenCode Config Builder] Using connected providers: ["openai"]
+[2026-03-08T04:16:24.549Z] [INFO] [opencode] [OpenCode Config] Generated config at: C:\Users\logan\AppData\Roaming\Navigator\opencode\opencode.json
+[2026-03-08T04:16:24.550Z] [INFO] [opencode] [OpenCode Config] Generated config at: C:\Users\logan\AppData\Roaming\Navigator\opencode\opencode.json
+[2026-03-08T04:16:24.550Z] [INFO] [opencode] [OpenCode Config] OPENCODE_CONFIG env set to: C:\Users\logan\AppData\Roaming\Navigator\opencode\opencode.json
+[2026-03-08T04:16:24.550Z] [INFO] [opencode] [OpenCode Config] OPENCODE_CONFIG_DIR env set to: C:\Users\logan\AppData\Roaming\Navigator\opencode
+[2026-03-08T04:16:24.552Z] [INFO] [main] [CLI Resolver] Using OpenCode CLI executable via launcher package: D:\Neo Verse\Navigator-main\node_modules\.pnpm\opencode-ai@1.2.10\node_modules\opencode-windows-x64\bin\opencode.exe
+[2026-03-08T04:16:24.552Z] [INFO] [opencode] [OpenCode CLI] Starting: D:\Neo Verse\Navigator-main\node_modules\.pnpm\opencode-ai@1.2.10\node_modules\opencode-windows-x64\bin\opencode.exe run --format json --model openai/gpt-5.2 --agent navigator hi
+[2026-03-08T04:16:24.557Z] [INFO] [main] [Bundled Node] Configuration:
+[2026-03-08T04:16:24.557Z] [INFO] [main]   Platform: win32
+[2026-03-08T04:16:24.557Z] [INFO] [main]   Architecture: x64
+[2026-03-08T04:16:24.558Z] [INFO] [main]   Node directory: D:\Neo Verse\Navigator-main\apps\desktop\resources\nodejs\win32-x64\node-v20.18.1-win-x64
+[2026-03-08T04:16:24.558Z] [INFO] [main]   Node path: D:\Neo Verse\Navigator-main\apps\desktop\resources\nodejs\win32-x64\node-v20.18.1-win-x64\node.exe
+[2026-03-08T04:16:24.558Z] [INFO] [main]   Available: true
+[2026-03-08T04:16:24.559Z] [INFO] [opencode] [OpenCode CLI] Added bundled Node.js to PATH: D:\Neo Verse\Navigator-main\apps\desktop\resources\nodejs\win32-x64\node-v20.18.1-win-x64
+[2026-03-08T04:16:24.560Z] [INFO] [opencode] [OpenCode CLI] Task ID in environment: task_[PHONE]_vrbr8ri
+[2026-03-08T04:16:24.561Z] [INFO] [opencode] [OpenCode CLI] Command: D:\Neo Verse\Navigator-main\node_modules\.pnpm\opencode-ai@1.2.10\node_modules\opencode-windows-x64\bin\opencode.exe
+[2026-03-08T04:16:24.561Z] [INFO] [opencode] [OpenCode CLI] Args: run --format json --model openai/gpt-5.2 --agent navigator hi
+[2026-03-08T04:16:24.561Z] [INFO] [opencode] [OpenCode CLI] Working directory: C:\Users\logan\AppData\Local\Temp
+[2026-03-08T04:16:24.562Z] [INFO] [opencode] [OpenCode CLI] PTY spawn: D:\Neo Verse\Navigator-main\node_modules\.pnpm\opencode-ai@1.2.10\node_modules\opencode-windows-x64\bin\opencode.exe run --format json --model openai/gpt-5.2 --agent navigator hi
+[2026-03-08T04:16:27.560Z] [INFO] [opencode] [OpenCode CLI] PTY Process PID: [ZIP]
+[2026-03-08T04:16:30.686Z] [INFO] [main] [LogWatcher] Watching log file: C:\Users\logan\.local\share\opencode\log\2026-03-08T041630.log
+[2026-03-08T04:16:36.759Z] [INFO] [main] [LogWatcher] Detected error: AI_APICallError The usage limit has been reached
+[2026-03-08T04:16:36.760Z] [INFO] [opencode] [OpenCode Adapter] Log watcher detected error: AI_APICallError
+[2026-03-08T04:16:36.761Z] [INFO] [opencode] [TaskManager] Cleaning up task task_[PHONE]_vrbr8ri
+[2026-03-08T04:16:36.762Z] [INFO] [opencode] [OpenCode Adapter] Disposing adapter for task task_[PHONE]_vrbr8ri
+[2026-03-08T04:16:36.777Z] [INFO] [opencode] [OpenCode Adapter] Adapter disposed
+[2026-03-08T04:16:36.777Z] [INFO] [opencode] [TaskManager] Task task_[PHONE]_vrbr8ri cleaned up. Active tasks: 0
+[2026-03-08T04:16:36.778Z] [INFO] [opencode] [TaskManager] Queue empty, no more tasks to process
+[2026-03-08T04:16:36.911Z] [INFO] [opencode] [OpenCode CLI] PTY Process exited with code: undefined, signal: undefined
