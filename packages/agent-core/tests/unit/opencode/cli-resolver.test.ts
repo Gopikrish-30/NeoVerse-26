@@ -136,10 +136,11 @@ describe('CLI Resolver', () => {
       fs.mkdirSync(launcherPath, { recursive: true });
       fs.mkdirSync(realLauncherPath, { recursive: true });
       fs.mkdirSync(path.dirname(cliPath), { recursive: true });
-      fs.writeFileSync(cliPath, 'binary');
+        fs.writeFileSync(cliPath, 'binary');
 
       const originalRealpathSync = fs.realpathSync;
-      const realpathSpy = vi.spyOn(fs, 'realpathSync').mockImplementation(((
+      const localFs = { realpathSync: fs.realpathSync };
+      const realpathSpy = vi.spyOn(localFs, 'realpathSync').mockImplementation(((
         inputPath: fs.PathLike,
       ) => {
         if (String(inputPath) === launcherPath) {
@@ -147,6 +148,10 @@ describe('CLI Resolver', () => {
         }
         return originalRealpathSync(inputPath);
       }) as typeof fs.realpathSync);
+      
+      // Monkey patch fs temporarily for the test (we'll need a different approach if this fails)
+      const mockFsFs = { ...fs, realpathSync: localFs.realpathSync };
+      vi.doMock('fs', () => mockFsFs);
 
       const result = resolveCliPath({
         isPackaged: false,

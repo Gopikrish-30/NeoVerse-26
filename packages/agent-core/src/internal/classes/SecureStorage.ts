@@ -13,11 +13,19 @@ export interface SecureStorageOptions {
   storagePath: string;
   appId: string;
   fileName?: string;
+  /**
+   * Optional OS-level encryption for the master key (e.g., Electron safeStorage).
+   * When provided, uses OS keychain/vault instead of machine-derived keys.
+   */
+  osEncrypt?: (plaintext: Buffer) => Buffer;
+  osDecrypt?: (ciphertext: Buffer) => Buffer;
 }
 
 interface SecureStorageSchema {
   values: Record<string, string>;
   salt?: string;
+  masterKeyEncrypted?: string; // Base64-encoded OS-encrypted master key
+  keyVersion?: number; // 1 = machine-derived (legacy), 2 = OS-encrypted
 }
 
 export type { ApiKeyProvider };
@@ -27,12 +35,17 @@ export class SecureStorage {
   private appId: string;
   private filePath: string;
   private derivedKey: Buffer | null = null;
+    private masterKey: Buffer | null = null;
   private data: SecureStorageSchema | null = null;
+  private osEncrypt?: (plaintext: Buffer) => Buffer;
+  private osDecrypt?: (ciphertext: Buffer) => Buffer;
 
   constructor(options: SecureStorageOptions) {
     this.storagePath = options.storagePath;
     this.appId = options.appId;
     this.filePath = path.join(this.storagePath, options.fileName || 'secure-storage.json');
+    this.osEncrypt = options.osEncrypt;
+    this.osDecrypt = options.osDecrypt;
   }
 
   private loadData(): SecureStorageSchema {
@@ -93,22 +106,116 @@ export class SecureStorage {
     return Buffer.from(data.salt, 'base64');
   }
 
-  private getDerivedKey(): Buffer {
+  /**
+   * Get the master encryption key - either from OS keychain or machine-derived fallback
+   */
+  private getMasterKey(): Buffer {
+    if (this.masterKey) {
+      return this.masterKey;
+    }
+
+    const data = this.loadData();
+
+    // Version 2: OS-encrypted master key (existing storage)
+    if (data.keyVersion === 2 && data.masterKeyEncrypted && this.osDecrypt) {
+      try {
+        const encryptedBuffer = Buffer.from(data.masterKeyEncrypted, 'base64');
+        this.masterKey = this.osDecrypt(encryptedBuffer);
+        return this.masterKey;
+      } catch (error) {
+        console.error('[SecureStorage] Failed to decrypt master key from OS vault:', error);
+        throw new Error('Failed to decrypt master key from OS credential vault');
+      }
+    }
+
+    // Initialize with OS encryption if available and no keys exist yet
+    if (this.osEncrypt && !data.keyVersion && Object.keys(data.values).length === 0) {
+      const newMasterKey = crypto.randomBytes(32);
+      const encryptedMasterKey = this.osEncrypt(newMasterKey);
+      data.masterKeyEncrypted = encryptedMasterKey.toString('base64');
+      data.keyVersion = 2;
+      this.masterKey = newMasterKey;
+      this.saveData();
+      return this.masterKey;
+    }
+
+    // Version 1 or no version (legacy): Machine-derived key
     if (this.derivedKey) {
       return this.derivedKey;
     }
 
     const machineData = [os.platform(), os.homedir(), os.userInfo().username, this.appId].join(':');
-
     const salt = this.getSalt();
-
     this.derivedKey = crypto.pbkdf2Sync(machineData, salt, 100000, 32, 'sha256');
+
+    // Migrate to OS-encrypted storage if callbacks are available and not already migrated
+    if (this.osEncrypt && !data.keyVersion && Object.keys(data.values).length > 0) {
+      this.migrateToOSEncryption();
+      return this.masterKey!; // After migration, masterKey is set
+    }
 
     return this.derivedKey;
   }
 
-  private encryptValue(value: string): string {
-    const key = this.getDerivedKey();
+  /**
+   * Migrate from machine-derived key to OS-encrypted master key
+   */
+  private migrateToOSEncryption(): void {
+    if (!this.osEncrypt || !this.derivedKey) {
+      return;
+    }
+
+    const data = this.loadData();
+    if (data.keyVersion === 2) {
+      return; // Already migrated
+    }
+
+    console.log('[SecureStorage] Migrating to OS-encrypted master key...');
+
+    try {
+      const legacyKey = this.derivedKey;
+
+      // Generate new random master key
+      const newMasterKey = crypto.randomBytes(32);
+
+      // Re-encrypt all values with the new key
+      const decryptedValues: Record<string, string> = {};
+      for (const [key, encryptedValue] of Object.entries(data.values)) {
+        const decrypted = this.decryptWithKey(encryptedValue, legacyKey);
+        if (decrypted) {
+          decryptedValues[key] = decrypted;
+        }
+      }
+
+      // Encrypt master key with OS vault
+      const encryptedMasterKey = this.osEncrypt(newMasterKey);
+      data.masterKeyEncrypted = encryptedMasterKey.toString('base64');
+      data.keyVersion = 2;
+
+      // Switch to new master key
+      this.masterKey = newMasterKey;
+      this.derivedKey = null;
+
+      // Re-encrypt all values
+      data.values = {};
+      for (const [key, value] of Object.entries(decryptedValues)) {
+        data.values[key] = this.encryptWithKey(value, newMasterKey);
+      }
+
+      this.saveData();
+      console.log('[SecureStorage] Successfully migrated to OS-encrypted master key');
+      
+      // Clear cache to force fresh load on next access
+      this.data = null;
+    } catch (error) {
+      console.error('[SecureStorage] Migration to OS encryption failed:', error);
+      // Revert to machine-derived key on error
+      this.masterKey = null;
+      throw error;
+    }
+  }
+
+  private encryptWithKey(value: string, key: Buffer): string {
     const iv = crypto.randomBytes(12);
 
     const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
@@ -121,7 +228,7 @@ export class SecureStorage {
     return `${iv.toString('base64')}:${authTag.toString('base64')}:${encrypted}`;
   }
 
-  private decryptValue(encryptedData: string): string | null {
+  private decryptWithKey(encryptedData: string, key: Buffer): string | null {
     try {
       const parts = encryptedData.split(':');
       if (parts.length !== 3) {
@@ -129,7 +236,6 @@ export class SecureStorage {
       }
 
       const [ivBase64, authTagBase64, ciphertext] = parts;
-      const key = this.getDerivedKey();
       const iv = Buffer.from(ivBase64, 'base64');
       const authTag = Buffer.from(authTagBase64, 'base64');
 
@@ -145,6 +251,17 @@ export class SecureStorage {
     }
   }
 
+  private encryptValue(value: string): string {
+    const key = this.getMasterKey();
+    return this.encryptWithKey(value, key);
+  }
+
+  private decryptValue(encryptedData: string): string | null {
+    // Get master key outside try/catch so OS decryption errors are propagated
+    const key = this.getMasterKey();
+    return this.decryptWithKey(encryptedData, key);
+  }
+
   storeApiKey(provider: string, apiKey: string): void {
     const data = this.loadData();
     const encrypted = this.encryptValue(apiKey);
@@ -153,6 +270,9 @@ export class SecureStorage {
   }
 
   getApiKey(provider: string): string | null {
+    // Ensure key initialization/migration happens before reading ciphertext.
+    this.getMasterKey();
+
     const data = this.loadData();
     const encrypted = data.values[`apiKey:${provider}`];
     if (!encrypted) {
@@ -239,6 +359,7 @@ export class SecureStorage {
   clearSecureStorage(): void {
     this.data = { values: {} };
     this.derivedKey = null;
+      this.masterKey = null;
     this.saveData();
   }
 

@@ -49,6 +49,9 @@ export function TaskLauncherItem({ task, isSelected, onClick }: TaskLauncherItem
                 alt={domain}
                 className="w-3 h-3 rounded-full"
                 loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             </span>
           ))}

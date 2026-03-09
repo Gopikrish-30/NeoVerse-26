@@ -346,10 +346,13 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       let newStatus: TaskStatus | null = null;
 
       if (event.type === 'message' && event.message && isCurrentTask && state.currentTask) {
-        updatedCurrentTask = {
-          ...state.currentTask,
-          messages: [...state.currentTask.messages, event.message],
-        };
+        const alreadyExists = state.currentTask.messages.some((m) => m.id === event.message!.id);
+        if (!alreadyExists) {
+          updatedCurrentTask = {
+            ...state.currentTask,
+            messages: [...state.currentTask.messages, event.message],
+          };
+        }
       }
 
       if (event.type === 'complete' && event.result) {
@@ -430,9 +433,16 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         return state;
       }
 
+      const existingIds = new Set(state.currentTask.messages.map((m) => m.id));
+      const newMessages = event.messages.filter((m) => !existingIds.has(m.id));
+
+      if (newMessages.length === 0) {
+        return { ...state, isLoading: false };
+      }
+
       const updatedTask = {
         ...state.currentTask,
-        messages: [...state.currentTask.messages, ...event.messages],
+        messages: [...state.currentTask.messages, ...newMessages],
       };
 
       return { currentTask: updatedTask, isLoading: false };

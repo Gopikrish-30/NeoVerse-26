@@ -26,6 +26,23 @@ export interface MessageBubbleProps {
 
 const COPIED_STATE_DURATION_MS = 1000;
 
+const proseClasses = cn(
+  'text-sm prose prose-sm max-w-none',
+  'prose-headings:text-foreground',
+  'prose-p:text-foreground prose-p:my-2',
+  'prose-strong:text-foreground prose-strong:font-semibold',
+  'prose-em:text-foreground',
+  'prose-code:text-foreground prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs',
+  'prose-pre:bg-muted prose-pre:text-foreground prose-pre:p-3 prose-pre:rounded-lg',
+  'prose-ul:text-foreground prose-ol:text-foreground',
+  'prose-li:text-foreground prose-li:my-1',
+  'prose-a:text-primary prose-a:underline',
+  'prose-blockquote:text-muted-foreground prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4',
+  'prose-hr:border-border',
+  'prose-table:w-full prose-thead:border-b prose-thead:border-border prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:text-foreground prose-th:font-semibold prose-td:px-3 prose-td:py-2 prose-td:text-foreground prose-tr:border-b prose-tr:border-border',
+  'break-words',
+);
+
 export const MessageBubble = memo(
   function MessageBubble({
     message,
@@ -90,23 +107,6 @@ export const MessageBubble = memo(
     }
 
     const showCopyButton = !isTool && !!message.content?.trim();
-
-    const proseClasses = cn(
-      'text-sm prose prose-sm max-w-none',
-      'prose-headings:text-foreground',
-      'prose-p:text-foreground prose-p:my-2',
-      'prose-strong:text-foreground prose-strong:font-semibold',
-      'prose-em:text-foreground',
-      'prose-code:text-foreground prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs',
-      'prose-pre:bg-muted prose-pre:text-foreground prose-pre:p-3 prose-pre:rounded-lg',
-      'prose-ul:text-foreground prose-ol:text-foreground',
-      'prose-li:text-foreground prose-li:my-1',
-      'prose-a:text-primary prose-a:underline',
-      'prose-blockquote:text-muted-foreground prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4',
-      'prose-hr:border-border',
-      'prose-table:w-full prose-thead:border-b prose-thead:border-border prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:text-foreground prose-th:font-semibold prose-td:px-3 prose-td:py-2 prose-td:text-foreground prose-tr:border-b prose-tr:border-border',
-      'break-words',
-    );
 
     return (
       <motion.div

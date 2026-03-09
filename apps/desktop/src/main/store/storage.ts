@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import * as electron from 'electron';
 import path from 'path';
 import { createStorage, type StorageAPI } from '@navigator_ai/agent-core';
 // Deep import for legacy migration only — getDatabase is intentionally not part of StorageAPI
@@ -9,17 +9,47 @@ import { importLegacyElectronStoreData } from './electronStoreImport';
 let _storage: StorageAPI | null = null;
 
 export function getDatabasePath(): string {
-  const dbName = app.isPackaged ? 'navigator.db' : 'navigator-dev.db';
-  return path.join(app.getPath('userData'), dbName);
+  const dbName = electron.app.isPackaged ? 'navigator.db' : 'navigator-dev.db';
+  return path.join(electron.app.getPath('userData'), dbName);
 }
 
 export function getStorage(): StorageAPI {
   if (!_storage) {
+    // Use OS credential vault (Keychain/DPAPI/libsecret) when available.
+    let safeStorage: typeof electron.safeStorage | undefined;
+    try {
+      safeStorage = (
+        electron as unknown as {
+          safeStorage?: typeof electron.safeStorage;
+        }
+      ).safeStorage;
+    } catch {
+      safeStorage = undefined;
+    }
+
+    const osEncryptionCallbacks =
+      safeStorage &&
+      typeof safeStorage.isEncryptionAvailable === 'function' &&
+      typeof safeStorage.encryptString === 'function' &&
+      typeof safeStorage.decryptString === 'function' &&
+      safeStorage.isEncryptionAvailable()
+        ? {
+            osEncrypt: (plaintext: Buffer) => safeStorage.encryptString(plaintext.toString('base64')),
+            osDecrypt: (ciphertext: Buffer) => {
+              const decrypted = safeStorage.decryptString(ciphertext);
+              return Buffer.from(decrypted, 'base64');
+            },
+          }
+        : {};
+
     _storage = createStorage({
       databasePath: getDatabasePath(),
       runMigrations: true,
-      userDataPath: app.getPath('userData'),
-      secureStorageFileName: app.isPackaged ? 'secure-storage.json' : 'secure-storage-dev.json',
+      userDataPath: electron.app.getPath('userData'),
+      secureStorageFileName: electron.app.isPackaged
+        ? 'secure-storage.json'
+        : 'secure-storage-dev.json',
+      ...osEncryptionCallbacks,
     });
   }
   return _storage;

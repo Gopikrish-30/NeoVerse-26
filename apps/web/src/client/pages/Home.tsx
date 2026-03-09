@@ -12,7 +12,9 @@ import { hasAnyReadyProvider } from '@navigator_ai/agent-core/common';
 import { PlusMenu } from '@/components/landing/PlusMenu';
 import { IntegrationIcon } from '@/components/landing/IntegrationIcons';
 import { useImageAttachments } from '@/hooks/useImageAttachments';
+import { usePdfAttachments } from '@/hooks/usePdfAttachments';
 import { buildPromptWithImages } from '@/lib/image-prompt';
+import { buildPromptWithPdfs } from '@/lib/pdf-prompt';
 
 const USE_CASE_KEYS = [
   { key: 'calendarPrepNotes', icons: ['calendar.google.com', 'docs.google.com'] },
@@ -40,6 +42,7 @@ export function HomePage() {
   const { t } = useTranslation('home');
 
   const imageAttachments = useImageAttachments();
+  const pdfAttachments = usePdfAttachments();
 
   const useCaseExamples = useMemo(() => {
     return USE_CASE_KEYS.map(({ key, icons }) => ({
@@ -66,25 +69,27 @@ export function HomePage() {
   }, [addTaskUpdate, setPermissionRequest, navigatorApp]);
 
   const executeTask = useCallback(async () => {
-    if ((!prompt.trim() && imageAttachments.attachedImages.length === 0) || isLoading) return;
+    if ((!prompt.trim() && imageAttachments.attachedImages.length === 0 && pdfAttachments.attachedPdfs.length === 0) || isLoading) return;
 
-    // Build the prompt, embedding image file paths if any images are attached
-    const finalPrompt = await buildPromptWithImages(prompt.trim(), imageAttachments.attachedImages);
+    // Build the prompt, embedding image and PDF file paths if any are attached
+    let finalPrompt = await buildPromptWithImages(prompt.trim(), imageAttachments.attachedImages);
+    finalPrompt = await buildPromptWithPdfs(finalPrompt, pdfAttachments.attachedPdfs);
 
     const taskId = `task_${Date.now()}`;
     const task = await startTask({ prompt: finalPrompt, taskId });
     if (task) {
       imageAttachments.clearAll();
+      pdfAttachments.clearAll();
       navigate(`/execution/${task.id}`);
     }
-  }, [prompt, imageAttachments, isLoading, startTask, navigate]);
+  }, [prompt, imageAttachments, pdfAttachments, isLoading, startTask, navigate]);
 
   const handleSubmit = async () => {
     if (isLoading) {
       void interruptTask();
       return;
     }
-    if (!prompt.trim() && imageAttachments.attachedImages.length === 0) return;
+    if (!prompt.trim() && imageAttachments.attachedImages.length === 0 && pdfAttachments.attachedPdfs.length === 0) return;
 
     const isE2EMode = await navigatorApp.isE2EMode();
     if (!isE2EMode) {
@@ -119,7 +124,7 @@ export function HomePage() {
 
   const handleApiKeySaved = async () => {
     setShowSettingsDialog(false);
-    if (prompt.trim() || imageAttachments.attachedImages.length > 0) {
+    if (prompt.trim() || imageAttachments.attachedImages.length > 0 || pdfAttachments.attachedPdfs.length > 0) {
       await executeTask();
     }
   };
@@ -203,6 +208,12 @@ export function HomePage() {
                 canAddMoreImages={imageAttachments.canAddMore}
                 imageInputRef={imageAttachments.fileInputRef}
                 onImageFileChange={imageAttachments.handleFileInputChange}
+                attachedPdfs={pdfAttachments.attachedPdfs}
+                onRemovePdf={pdfAttachments.removePdf}
+                onOpenPdfPicker={pdfAttachments.openFilePicker}
+                canAddMorePdfs={pdfAttachments.canAddMore}
+                pdfInputRef={pdfAttachments.fileInputRef}
+                onPdfFileChange={pdfAttachments.handleFileInputChange}
                 toolbarLeft={
                   <PlusMenu
                     onSkillSelect={handleSkillSelect}
@@ -226,7 +237,7 @@ export function HomePage() {
                 {t('examplePrompts')}
               </h2>
 
-              <div className="grid grid-cols-3 gap-3 w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full">
                 {useCaseExamples.map((example, index) => (
                   <motion.button
                     key={index}

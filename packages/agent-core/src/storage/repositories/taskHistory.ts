@@ -80,12 +80,21 @@ function getMessagesForTask(taskId: string): TaskMessage[] {
           }))
         : undefined;
 
+    let parsedToolInput: unknown;
+    if (row.tool_input) {
+      try {
+        parsedToolInput = JSON.parse(row.tool_input);
+      } catch {
+        parsedToolInput = row.tool_input;
+      }
+    }
+
     messages.push({
       id: row.id,
       type: row.type as TaskMessage['type'],
       content: row.content,
       toolName: row.tool_name || undefined,
-      toolInput: row.tool_input ? JSON.parse(row.tool_input) : undefined,
+      toolInput: parsedToolInput,
       timestamp: row.timestamp,
       attachments,
     });

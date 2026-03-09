@@ -9,6 +9,7 @@ import {
 
 const PERMISSION_API_PORT = process.env.PERMISSION_API_PORT || '9226';
 const PERMISSION_API_URL = `http://127.0.0.1:${PERMISSION_API_PORT}/permission`;
+const LOCAL_API_AUTH_TOKEN = process.env.LOCAL_API_AUTH_TOKEN || '';
 
 interface FilePermissionInput {
   operation: 'create' | 'delete' | 'rename' | 'move' | 'modify' | 'overwrite';
@@ -83,9 +84,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request): Promise<CallToo
   }
 
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (LOCAL_API_AUTH_TOKEN) {
+      headers['X-Navigator-Auth'] = LOCAL_API_AUTH_TOKEN;
+    }
+
     const response = await fetch(PERMISSION_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         operation,
         filePath,

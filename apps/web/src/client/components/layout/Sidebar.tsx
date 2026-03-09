@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -107,7 +105,9 @@ export default function Sidebar() {
         <div className="px-3 py-4 border-t border-border flex items-center justify-between">
           {/* App Name - Bottom Left */}
           <div className="flex items-center">
-            <span className="text-sm font-semibold text-primary pl-1.5 tracking-tight">Navigator</span>
+            <span className="text-sm font-semibold text-primary pl-1.5 tracking-tight">
+              Navigator
+            </span>
           </div>
 
           {/* Settings Button - Bottom Right */}

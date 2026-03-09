@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { springs } from '../../lib/animations';
 import { getToolDisplayInfo, THINKING_PHRASES } from '../../constants/tool-mappings';
+import { useTranslation } from 'react-i18next';
 import { SpinningIcon } from './SpinningIcon';
 
 interface ToolProgressProps {
@@ -30,6 +31,7 @@ export function ToolProgress({
   taskId,
   elapsedTime,
 }: ToolProgressProps) {
+  const { t } = useTranslation('execution');
   const thinkingPhrase = useMemo(() => {
     return THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)];
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,9 +72,7 @@ export function ToolProgress({
               startupStageTaskId === taskId &&
               startupStage?.isFirstTask &&
               startupStage.stage === 'browser' && (
-                <span className="text-xs text-muted-foreground/50 ml-6">
-                  First task takes a bit longer...
-                </span>
+                <span className="text-xs text-muted-foreground/50 ml-6">{t('coldStartHint')}</span>
               )}
           </motion.div>
         ))}
